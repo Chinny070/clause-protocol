@@ -2,7 +2,7 @@
 # { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 
 from genlayer import *
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import datetime
 import hashlib
 import json
@@ -21,7 +21,6 @@ import json
 PROGRAM_ACTIVE = "ACTIVE"
 PROGRAM_PAUSED = "PAUSED"
 PROGRAM_RETIRED = "RETIRED"
-_PROGRAM_STATUSES = (PROGRAM_ACTIVE, PROGRAM_PAUSED, PROGRAM_RETIRED)
 
 PASSPORT_ACTIVE = "ACTIVE"
 PASSPORT_EXPIRED = "EXPIRED"
@@ -33,7 +32,6 @@ RESERVATION_CONSUMED = "CONSUMED"
 
 CLAUSE_COVERED = "COVERED"
 CLAUSE_EXCLUDED = "EXCLUDED"
-_CLAUSE_KINDS = (CLAUSE_COVERED, CLAUSE_EXCLUDED)
 
 REMEDY_FULL_REFUND = "FULL_REFUND"
 REMEDY_REPAIR_CREDIT = "REPAIR_CREDIT"
@@ -58,6 +56,18 @@ _EVIDENCE_GAP_BEHAVIORS = ("RULE_FOR_HOLDER", "RULE_FOR_MANUFACTURER", "BLOCK")
 
 # V1 lock: remand/challenge recursion depth (docs/STATE_MACHINES.md, docs/APPEALS_AND_FINALITY.md).
 _MAX_CHALLENGE_DEPTH = 1
+
+# Oversized-input guards for the collections validated by _validate_clause_list /
+# _validate_remedy_table (Stage 1 hardening pass, STAGE_1_VERIFICATION.md item 2). Chosen as
+# generous-but-finite ceilings, not a business/product judgment about real warranty programs -
+# only to prevent unbounded storage growth from a single write.
+_MAX_CLAUSES_PER_KIND = 50
+_MAX_REMEDY_ROWS = 50
+_MAX_EVIDENCE_CATEGORIES = 20
+_MAX_SHORT_LEN = 200
+_MAX_TEXT_LEN = 4000
+_REMEDY_ROW_KEYS = frozenset({"outcome", "clause_id", "remedy_kind", "remedy_value"})
+_CLAUSE_ROW_KEYS = frozenset({"clause_id", "text"})
 
 # Sanity ceiling only - not an actuarial/solvency judgment, just an overflow guard for u256
 # arithmetic and for a single-warranty remedy relative to a pool. Ten million GEN.
@@ -103,6 +113,24 @@ def _require(condition: bool, message: str) -> None:
 
 
 def _canonical_json(obj) -> str:
+    """CLAUSE's definition of "canonical JSON" (Stage 1 hardening pass,
+    STAGE_1_VERIFICATION.md item 2): a serialization is canonical here if and only if two
+    semantically-equivalent inputs always produce byte-identical output. That requires more
+    than `sort_keys=True` + compact separators (which only fixes *object key* order and
+    whitespace) - it also requires the caller to have already normalized any *array* whose
+    element order carries no meaning (an unordered ID set or a table keyed by a unique tuple)
+    before this function ever sees it. This function performs the object-key/whitespace half
+    of canonicalization; `_validate_clause_list` and `_validate_remedy_table` perform the
+    array-ordering half (sorting `covered_clause_ids`/`excluded_clause_ids`/evidence
+    categories lexicographically, and `remedy_table` rows by `(outcome, clause_id,
+    remedy_kind, remedy_value)`) before their results are ever passed here. Free-text fields
+    with meaningful order (e.g. `product_scope`, clause `text`) are never reordered - only
+    fields that are logically sets/keyed-tables are. As long as every caller of this function
+    passes already-order-normalized data for such fields, later code (Stage 2+) can compare
+    two `fingerprint` values, or two `json.loads(...)` results, for exact/`==` equality to
+    decide semantic equality - it will never need to re-parse and compare raw JSON text or
+    tolerate reordering itself.
+    """
     return json.dumps(obj, sort_keys=True, separators=(",", ":"))
 
 
@@ -124,35 +152,72 @@ def _validate_hex_commitment(raw: str) -> bytes:
         raise gl.vm.UserError("malformed product commitment: not valid hex")
 
 
-def _validate_clause_list(rows: list, kind: str) -> list:
-    ids = []
+def _validate_clause_list(rows: list, kind: str, min_count: int) -> list:
+    """Validates a covered/excluded clause list and returns the clause_ids in canonical
+    (lexicographically sorted, deduplicated-by-construction) order - see `_canonical_json`'s
+    docstring for why this matters for fingerprint stability. `min_count` lets covered clauses
+    be required (a warranty must cover something) while excluded clauses stay optional (a
+    program may legitimately have zero exclusions)."""
+    _require(isinstance(rows, list), "clause list must be a list")
+    _require(len(rows) >= min_count, f"at least {min_count} {kind.lower()} clause(s) required")
+    _require(len(rows) <= _MAX_CLAUSES_PER_KIND, f"too many {kind.lower()} clauses (max {_MAX_CLAUSES_PER_KIND})")
     expected_prefix = "C-" if kind == CLAUSE_COVERED else "X-"
+    ids = []
     for row in rows:
-        _require(isinstance(row, dict) and "clause_id" in row and "text" in row, "malformed clause row")
+        _require(isinstance(row, dict), "malformed clause row: expected an object")
+        _require(set(row.keys()) == _CLAUSE_ROW_KEYS, "clause row must have exactly the keys clause_id, text")
         clause_id = row["clause_id"]
-        _require(isinstance(clause_id, str) and clause_id.startswith(expected_prefix), f"clause_id must start with '{expected_prefix}'")
-        _require(isinstance(row["text"], str) and len(row["text"]) > 0, "clause text must be a non-empty string")
+        text = row["text"]
+        _require(isinstance(clause_id, str) and 0 < len(clause_id) <= _MAX_SHORT_LEN, "clause_id must be a non-empty string within length limits")
+        _require(clause_id.startswith(expected_prefix), f"clause_id must start with '{expected_prefix}'")
+        _require(isinstance(text, str) and 0 < len(text) <= _MAX_TEXT_LEN, "clause text must be a non-empty string within length limits")
         _require(clause_id not in ids, "duplicate clause_id")
         ids.append(clause_id)
-    return ids
+    return sorted(ids)
 
 
 def _validate_remedy_table(rows: list, known_clause_ids: set) -> list:
+    """Validates the remedy table and returns rows sorted by (outcome, clause_id,
+    remedy_kind, remedy_value) - canonical order, so two semantically-equivalent tables
+    submitted in different row order fingerprint identically (see `_canonical_json`)."""
+    _require(isinstance(rows, list), "remedy_table must be a list")
+    _require(len(rows) >= 1, "remedy_table must not be empty")
+    _require(len(rows) <= _MAX_REMEDY_ROWS, f"too many remedy rows (max {_MAX_REMEDY_ROWS})")
     validated = []
+    seen_pairs = set()
     for row in rows:
-        _require(isinstance(row, dict), "malformed remedy row")
-        outcome = row.get("outcome")
-        clause_id = row.get("clause_id", "")
-        remedy_kind = row.get("remedy_kind")
-        remedy_value = row.get("remedy_value")
-        _require(outcome in _OUTCOMES, "remedy row outcome must be one of " + str(_OUTCOMES))
+        _require(isinstance(row, dict), "malformed remedy row: expected an object")
+        _require(set(row.keys()) == _REMEDY_ROW_KEYS, "remedy row must have exactly the keys outcome, clause_id, remedy_kind, remedy_value")
+        outcome = row["outcome"]
+        clause_id = row["clause_id"]
+        remedy_kind = row["remedy_kind"]
+        remedy_value = row["remedy_value"]
+        _require(isinstance(outcome, str) and outcome in _OUTCOMES, "remedy row outcome must be one of " + str(_OUTCOMES))
+        _require(isinstance(clause_id, str), "remedy row clause_id must be a string")
         _require(clause_id == "" or clause_id in known_clause_ids, "remedy row clause_id must reference a clause on this constitution")
-        _require(remedy_kind in _REMEDY_KINDS, "remedy row remedy_kind must be one of " + str(_REMEDY_KINDS))
+        _require(isinstance(remedy_kind, str) and remedy_kind in _REMEDY_KINDS, "remedy row remedy_kind must be one of " + str(_REMEDY_KINDS))
         _require(isinstance(remedy_value, int) and not isinstance(remedy_value, bool) and remedy_value >= 0, "remedy_value must be a non-negative integer")
         if remedy_kind == REMEDY_PARTIAL_BPS:
             _require(remedy_value <= 10_000, "remedy_value for PARTIAL_BPS must be <= 10000")
         if remedy_kind == REMEDY_NONE:
             _require(remedy_value == 0, "remedy_value for NONE must be 0")
+
+        # Wrong-clause-kind guard: a row may only cite a clause whose kind matches its own
+        # outcome direction (COVERED -> C-*, NOT_COVERED -> X-*). Every other outcome
+        # (INSUFFICIENT_EVIDENCE / EVIDENCE_UNAVAILABLE / INVALID_CLAIM / ACCEPTED_NO_CONTEST)
+        # is procedural, not clause-specific, and must be outcome-level (clause_id == "").
+        if clause_id != "":
+            if outcome == "COVERED":
+                _require(clause_id.startswith("C-"), "a COVERED remedy row's clause_id must reference a covered (C-*) clause")
+            elif outcome == "NOT_COVERED":
+                _require(clause_id.startswith("X-"), "a NOT_COVERED remedy row's clause_id must reference an excluded (X-*) clause")
+            else:
+                raise gl.vm.UserError(f"remedy rows for outcome {outcome} must be outcome-level (clause_id == '')")
+
+        pair = (outcome, clause_id)
+        _require(pair not in seen_pairs, "duplicate remedy row for the same (outcome, clause_id) pair")
+        seen_pairs.add(pair)
+
         validated.append(
             {
                 "outcome": outcome,
@@ -161,6 +226,7 @@ def _validate_remedy_table(rows: list, known_clause_ids: set) -> list:
                 "remedy_value": int(remedy_value),
             }
         )
+    validated.sort(key=lambda r: (r["outcome"], r["clause_id"], r["remedy_kind"], r["remedy_value"]))
     return validated
 
 
@@ -397,13 +463,22 @@ class ClauseProtocol(gl.Contract):
             "unavailable_evidence_behavior must be one of " + str(_EVIDENCE_GAP_BEHAVIORS),
         )
 
-        covered_ids = _validate_clause_list(covered_clauses, CLAUSE_COVERED)
-        excluded_ids = _validate_clause_list(excluded_clauses, CLAUSE_EXCLUDED)
+        covered_ids = _validate_clause_list(covered_clauses, CLAUSE_COVERED, min_count=1)
+        excluded_ids = _validate_clause_list(excluded_clauses, CLAUSE_EXCLUDED, min_count=0)
         all_ids = set(covered_ids) | set(excluded_ids)
         _require(len(all_ids) == len(covered_ids) + len(excluded_ids), "duplicate clause_id across covered/excluded")
 
+        # Evidence categories are a set: validated, deduplicated, and returned in canonical
+        # (sorted) order for the same fingerprint-stability reason as clause IDs above.
+        _require(isinstance(acceptable_evidence_categories, list), "acceptable_evidence_categories must be a list")
+        _require(len(acceptable_evidence_categories) >= 1, "at least one acceptable evidence category is required")
+        _require(len(acceptable_evidence_categories) <= _MAX_EVIDENCE_CATEGORIES, f"too many evidence categories (max {_MAX_EVIDENCE_CATEGORIES})")
+        seen_categories = set()
         for category in acceptable_evidence_categories:
-            _require(isinstance(category, str) and len(category) > 0, "evidence category must be a non-empty string")
+            _require(isinstance(category, str) and 0 < len(category) <= _MAX_SHORT_LEN, "evidence category must be a non-empty string within length limits")
+            _require(category not in seen_categories, "duplicate evidence category")
+            seen_categories.add(category)
+        canonical_categories = sorted(seen_categories)
 
         remedy_rows = _validate_remedy_table(remedy_table, all_ids)
 
@@ -423,7 +498,7 @@ class ClauseProtocol(gl.Contract):
             "coverage_calc": coverage_calc,
             "covered_clause_ids": covered_ids,
             "excluded_clause_ids": excluded_ids,
-            "acceptable_evidence_categories": list(acceptable_evidence_categories),
+            "acceptable_evidence_categories": canonical_categories,
             "source_eligibility_policy": source_eligibility_policy,
             "claim_deadline_s": int(claim_deadline_s),
             "manufacturer_response_period_s": int(manufacturer_response_period_s),
@@ -445,7 +520,7 @@ class ClauseProtocol(gl.Contract):
             coverage_calc=coverage_calc,
             covered_clause_ids_json=_canonical_json(covered_ids),
             excluded_clause_ids_json=_canonical_json(excluded_ids),
-            acceptable_evidence_categories_json=_canonical_json(list(acceptable_evidence_categories)),
+            acceptable_evidence_categories_json=_canonical_json(canonical_categories),
             source_eligibility_policy=source_eligibility_policy,
             claim_deadline_s=claim_deadline_s,
             manufacturer_response_period_s=manufacturer_response_period_s,

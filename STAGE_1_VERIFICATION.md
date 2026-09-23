@@ -7,6 +7,13 @@
 only, explained in §8). No production frontend, no evidence/adjudication/challenge/settlement
 code, no deployment, no wallet/private key use.
 
+**Update, hardening pass (2026-09-23): still PASS, now 116 tests.** See §15 for the four
+hardening items (constitution-immutability testing strengthened to be schema-derived rather
+than a hand-maintained name list; canonical-JSON invariants audited, documented, and actually
+implemented rather than assumed; the u32-vs-u64 TreeMap-key decision independently
+re-verified with a correction to which `genvm-lint` subcommand is responsible; and the
+timestamp trust boundary formally audited and tested).
+
 ## 2. Repository isolation verification
 
 - Repository root: `C:/Users/USERpc/clauseproduct` (confirmed via `git rev-parse
@@ -273,6 +280,209 @@ Branch: `master`. Remotes: none. Commit `f701299` includes this report itself, t
 and all test files (13 files changed, 2363 insertions). Working tree is clean after this
 commit.
 
-## 14. Required statement
+## 15. Stage 1 Hardening Pass (addendum, 2026-09-23)
+
+Performed after an independent read-only audit of the original Stage 1 report and source.
+Architecture and contract scope are unchanged - no evidence retrieval, nondeterministic
+execution, adjudication, appeals, settlement, frontend code, or deployment was added. All four
+requested items below, plus the optional dead-code cleanup.
+
+### Item 1 — Constitution immutability testing, schema-derived
+
+The original `test_retroactive_constitution_change_has_no_code_path` (still present, kept as
+a defense-in-depth check) tested absence of mutation methods against a hand-maintained
+forbidden-name set - a real weakness, since a method with a different name could in principle
+still exist and mutate a constitution without ever appearing on that list.
+
+New file `tests/direct/test_constitution_hardening.py` fixes this by deriving the write-method
+inventory from the contract's own authoritative ABI schema (`genvm-lint schema --json`, the
+same introspection GenVM itself uses) rather than a hand-maintained list:
+
+- `test_write_method_inventory_matches_expected_set` asserts the schema's exact write-method
+  set equals `{create_program, pause_program, resume_program, retire_program,
+  create_constitution, fund_pool, withdraw_pool, issue_warranty, cancel_warranty,
+  release_expired_reservation}` - 10 methods, matching `genvm-lint validate`'s own count. If a
+  future stage adds/renames/removes a write method, this test fails immediately, forcing the
+  audit below to be extended before anyone can trust its coverage claim again.
+- `test_every_non_constitution_write_method_leaves_frozen_constitution_untouched` exercises
+  every one of those 10 methods (all of them except `create_constitution` itself, which is the
+  one method allowed to touch constitution storage, by inserting new records only) in a
+  realistic sequence against a single frozen constitution, asserting full-dict equality
+  (`get_constitution(...) == snapshot`) after every single call - this proves field-level
+  semantic equality of all 15 frozen fields (`fingerprint` compared as its exact hex string,
+  i.e. byte-for-byte) after each one, not a spot-checked subset.
+- `test_retire_program_does_not_touch_constitution` isolates the one genuinely terminal write
+  method (retiring forecloses further issuance) as its own minimal repro.
+- `test_frozen_at_and_fingerprint_survive_repeated_issuance_byte_for_byte` directly targets the
+  two fields most at risk of a subtle re-write bug (a timestamp and a hash), proving a second
+  issuance against an already-frozen constitution changes neither, even when real protocol
+  time has moved on between the two issuances (`direct_vm.warp`).
+
+**Finding:** no mutation path exists beyond what Stage 1 already claimed - the original claim
+was correct, but was resting on weaker evidence (a name blocklist) than it should have. It now
+rests on the contract's own schema plus exhaustive behavioral proof across every real write
+method.
+
+### Item 2 — Canonical JSON invariants
+
+**What "canonical JSON" means in CLAUSE, now explicit** (documented in `_canonical_json`'s
+docstring in `contracts/clause_protocol.py`, Stage 1 hardening pass): a serialization is
+canonical here iff two semantically-equivalent inputs always produce byte-identical output.
+That requires two independent things: (a) object keys sorted and whitespace-free
+(`json.dumps(sort_keys=True, separators=(",", ":"))` - this is what the *original* Stage 1
+code actually did), and (b) any array whose element order carries no meaning (an unordered ID
+set, or a table keyed by a unique tuple) normalized to one canonical order *before* it reaches
+`_canonical_json`.
+
+**Audit finding: the original implementation only did (a), not (b), and was mislabeled.**
+`covered_clause_ids`, `excluded_clause_ids`, `acceptable_evidence_categories`, and
+`remedy_table` were stored in raw submission order. Two constitutions with an identical
+clause set or remedy table submitted in a different order would validate identically but
+produce different stored list order (and, had `program_id`/`version` matched, a different
+fingerprint) - not actually canonical, despite the name. This is now fixed, not just
+relabeled: `_validate_clause_list` returns clause IDs lexicographically sorted;
+`acceptable_evidence_categories` is deduplicated and sorted; `_validate_remedy_table` returns
+rows sorted by `(outcome, clause_id, remedy_kind, remedy_value)`. `_canonical_json`'s
+docstring was rewritten to state this precisely, including which fields are intentionally
+*not* reordered (free text with meaningful order, e.g. `product_scope`, clause `text`).
+
+**Confirmation for later stages:** because every array that matters for equality is now
+canonicalized before storage, Stage 2+ code can compare two `fingerprint` values, or two
+`json.loads(...)` results, with plain `==`, and never needs to re-parse or tolerate
+reordering/whitespace differences in raw JSON text. `test_fingerprint_is_order_independent_
+for_fixed_program_and_version` (new) proves this from first principles - it recomputes the
+expected fingerprint independently using stdlib `json`/`hashlib` only (no CLAUSE helper
+functions), confirming the on-chain value matches exactly.
+
+**New hardening tightened beyond pure canonicalization**, all in the same audit pass since
+they were adjacent gaps found while reading the two validators: exact-key-set enforcement
+(rejects missing or unexpected keys in clause/remedy rows, previously silently tolerated via
+`.get()` with defaults), non-empty requirements for `covered_clauses`/`remedy_table`/
+`acceptable_evidence_categories` (a warranty covering nothing, or with no remedy definitions,
+was previously accepted), a wrong-clause-kind guard (a `COVERED` remedy row can no longer cite
+an `X-*` clause and vice versa; the four procedural outcomes must be outcome-level), a
+duplicate-`(outcome, clause_id)`-pair guard, and finite size caps (`_MAX_CLAUSES_PER_KIND=50`,
+`_MAX_REMEDY_ROWS=50`, `_MAX_EVIDENCE_CATEGORIES=20`, `_MAX_SHORT_LEN=200`,
+`_MAX_TEXT_LEN=4000`) to bound storage growth from a single write.
+
+New file `tests/direct/test_canonical_json_hardening.py` (33 tests) covers: malformed
+top-level types, wrong element types, missing/unexpected keys, forbidden duplicates (evidence
+category, remedy `(outcome, clause_id)` pair), nonexistent clause references, wrong-clause-kind
+(both directions plus procedural-outcome-with-clause_id), empty required collections (and the
+one deliberately-still-optional exception, `excluded_clauses`), negative/non-integer/bool
+numeric values, oversized input (count and length caps), and four order-independence /
+canonical-representation tests (clause order, evidence-category order, dict key order, and the
+from-first-principles fingerprint recomputation).
+
+**Security/behavior impact of the fix:** none of this weakens anything - it only makes
+previously-accepted-but-under-specified inputs either rejected (stricter validation) or
+normalized (order-independent storage). No previously-rejected input is now accepted.
+
+### Item 3 — Independent verification of the u32 decision
+
+An isolated, temporary two-file experiment was created **outside the CLAUSE repository**
+(under the session scratchpad, never touching `contracts/clause_protocol.py`): two minimal
+single-method contracts, `TreeMapKeyProbeU64` (a `TreeMap[u64, str]` field) and
+`TreeMapKeyProbeU32` (a `TreeMap[u32, str]` field), otherwise byte-identical. Both were run
+through the same two `genvm-lint` subcommands used to gate Stage 1.
+
+**Exact results:**
+
+```
+$ genvm-lint validate probe_u64_key.py
+✓ Validation passed  (Contract: TreeMapKeyProbeU64, Methods: 2)
+
+$ genvm-lint validate probe_u32_key.py
+✓ Validation passed  (Contract: TreeMapKeyProbeU32, Methods: 2)
+
+$ genvm-lint lint probe_u64_key.py
+✗ Lint failed
+  line 7: TreeMap key for 'data' must be Comparable (str, Address, u32, etc.), got 'u64'
+
+$ genvm-lint lint probe_u32_key.py
+✓ Lint passed (3 checks)
+```
+
+**Correction to the original Stage 1 report:** §9 item 1 and §10 Deviation #1 both stated that
+`genvm-lint validate` rejects `u64` TreeMap keys. That is **incorrect** and is corrected here
+by this independent probe: `validate` passes a `u64`-keyed `TreeMap` without complaint on both
+probes. It is specifically `genvm-lint lint` that performs the Comparable-key check and
+rejects `u64` (accepting `u32`). The original Stage 1 pass happened to run `lint` before
+`validate` and attributed the failure to the wrong subcommand when summarizing; the underlying
+engineering decision (use `u32` for entity IDs) was correct and remains unchanged, but the
+attribution in the written record was wrong until this correction. §9 and §10 of this document
+are left as originally written, with this note as the authoritative correction, rather than
+silently edited, per the instruction not to silently change prior findings.
+
+### Item 4 — Timestamp trust boundary audit
+
+New file `tests/direct/test_timestamp_trust_boundary.py` (7 tests). Confirmed: every
+protocol-controlled timestamp field (`WarrantyProgram.created_at`, `WarrantyConstitution.
+frozen_at`, `WarrantyPassport.registered_at`, `Reservation.created_at`/`released_at`) is
+written exclusively via `_now()`, which reads only `gl.message_raw["datetime"]` - confirmed
+schema-side by `test_no_write_method_accepts_a_protocol_timestamp_parameter`, which derives
+the complete write-method parameter list from `genvm-lint schema --json` and asserts none of
+them contain a parameter named anything timestamp-shaped (`registered_at`, `created_at`,
+`frozen_at`, `released_at`, `now`, `datetime`, `timestamp`). There is structurally no argument
+through which a caller could set or override any of these fields.
+
+`coverage_start`/`coverage_end` are the one deliberate, documented exception: manufacturer-
+asserted warranty terms, not protocol timestamps, per the nine-timestamp taxonomy in
+`docs/ARCHITECTURE.md`/`docs/DATA_MODEL.md`. `test_registered_at_is_independent_of_caller_
+supplied_coverage_dates` proves the two are never conflated - a warranty issued with a
+coverage window 50 years in the future still records `registered_at` as the actual current
+protocol time, not anything derived from the caller-supplied window.
+`test_registered_at_matches_protocol_time_exactly`, `test_frozen_at_matches_protocol_time_at_
+the_freeze_moment`, `test_program_created_at_matches_protocol_time`, and
+`test_reservation_created_and_released_at_match_protocol_time` each pin a warped protocol time
+and confirm the stored field equals it exactly (not merely "close to" or "after").
+`test_now_is_read_live_not_cached_across_calls` confirms `_now()` is re-read on every call
+rather than cached from deploy time.
+
+**Caveat, stated plainly:** `direct_vm.warp()` is the gltest-direct harness's way of
+*simulating* the GenVM runtime's control over `gl.message_raw["datetime"]` for test purposes.
+It is not equivalent to a caller-facing lever - no public method parameter maps to it (per the
+schema-derived test above) - but the simulation itself is only as trustworthy as the harness;
+final confirmation that a real GenVM/Studio caller has no way to influence this field remains
+a live-network verification item, not something direct-mode testing can close on its own (same
+category of caveat as the native-GEN-custody items already listed in §11).
+
+### Optional cleanup performed
+
+`dataclasses.field` (unused import), `_PROGRAM_STATUSES`, and `_CLAUSE_KINDS` (both unused
+module-level tuples) removed. Confirmed unused by grep before removal; no behavior change;
+`genvm-lint lint`/`validate`/`schema`/`typecheck` results are identical before and after
+(same method count, same 23 informational typecheck notices).
+
+### Hardening pass test/lint results
+
+- `genvm-lint lint`: ✓ Lint passed (3 checks) - unchanged.
+- `genvm-lint validate`: ✓ Validation passed - Contract: ClauseProtocol, Methods: 19 (9 view,
+  10 write) - unchanged.
+- `genvm-lint schema`: identical 19-method inventory - unchanged.
+- `genvm-lint typecheck`: 0 errors, 0 warnings, same 23 informational
+  `reportOptionalMemberAccess` notices (line numbers shifted by the docstring/validator
+  insertions, substance unchanged) - unchanged in kind.
+- Full suite: **116 passed, 0 failed, 0 skipped** (72 original + 33
+  `test_canonical_json_hardening.py` + 4 `test_constitution_hardening.py` + 7
+  `test_timestamp_trust_boundary.py`).
+
+### Files changed in this hardening pass
+
+- `contracts/clause_protocol.py` — canonical-JSON documentation/implementation, stricter
+  `_validate_clause_list`/`_validate_remedy_table` (exact key sets, wrong-clause-kind guard,
+  duplicate-pair guard, non-empty requirements, size caps), evidence-category
+  validation/canonicalization in `create_constitution`, removed unused `field` import and two
+  unused constant tuples.
+- `tests/direct/test_constitution_hardening.py` (new).
+- `tests/direct/test_canonical_json_hardening.py` (new).
+- `tests/direct/test_timestamp_trust_boundary.py` (new).
+- `STAGE_1_VERIFICATION.md` (this addendum).
+
+Temporary probe files (`probe_u64_key.py`, `probe_u32_key.py`) were created and run outside
+the repository (session scratchpad) and are not part of this commit, per the instruction not
+to alter the production contract to perform the u32 check.
+
+## 16. Required statement
 
 **No deployment was performed and no user wallet/private key was used.**
