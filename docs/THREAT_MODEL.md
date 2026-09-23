@@ -1,0 +1,140 @@
+# CLAUSE — Threat Model (Stage 0)
+
+Organized by the build brief's required categories, each with the concrete CLAUSE mechanism that
+addresses it (cross-referenced, not restated in full — see the linked doc for mechanism detail).
+
+## Unauthorized mutation / authorization
+
+- Every write method's caller is checked against the specific role it requires (`manufacturer` of the
+  relevant Program/Pool, `holder` of the relevant Passport, or explicitly permissionless where stated in
+  `STATE_MACHINES.md`, e.g. `freeze_evidence`/`adjudicate`/`settle_claim`/`release_expired_reservation`
+  are deliberately permissionless so no single party can stall a claim by inaction).
+- Permissionless methods are permissionless only over already-frozen, already-validated state — they
+  never let a random caller inject new facts, only advance a lifecycle that frozen rules already govern.
+
+## Post-registration rewrite
+
+- Covered structurally by Constitution immutability (`WARRANTY_CONSTITUTION.md`) and the Passport's
+  frozen fingerprint/version copy (`ARCHITECTURE.md`, Anti-rewrite section). Stage 1 test: attempt to
+  mutate any Constitution field after `is_frozen == True`, on every field, expect revert.
+
+## Forged holder/product association
+
+- `WarrantyPassport.holder` is set once at `issue_warranty` from the manufacturer's own call (the
+  manufacturer designates the holder address at issuance — this is a manufacturer-trust boundary,
+  documented as such: CLAUSE cannot cryptographically prove a real-world purchase happened, only that
+  the manufacturer attested to it on-chain). `product_commitment` (hash of serial+salt) prevents a third
+  party from later claiming knowledge of the serial number alone as proof of association — filing a
+  claim requires the actual salt, held only by the real holder.
+
+## Out-of-window / duplicate claims
+
+- `file_claim`'s deadline check (`STATE_MACHINES.md`) rejects late claims. Duplicate claims against the
+  same warranty are allowed to exist as separate `Claim` records (a holder may have multiple genuine
+  incidents) but each is independently reservation-locked and independently adjudicated — there is no
+  path where two Claims double-spend the same GEN, since `pending_locks` accounting
+  (`ECONOMIC_INVARIANTS.md`) tracks locks per-Claim against the shared Reservation, and `file_claim`'s
+  precondition (`pending_locks + amount <= reserved_liability`) prevents over-locking beyond what a
+  single warranty's Reservation actually backs.
+
+## Duplicate settlement / withdrawal
+
+- One-shot `settled_at`/`withdrawn_at` guards, set before value moves (`ECONOMIC_INVARIANTS.md`).
+
+## Evidence after freeze
+
+- `EvidenceRecord` fields become immutable once `frozen_at != 0`; any write path touching a frozen
+  record's `extracted_facts`/`fingerprint`/`retrieval_status` must revert. Stage 1 test: attempt to
+  re-submit/re-freeze an already-frozen `evidence_id`, expect revert.
+
+## Source-policy bypass
+
+- Step 1 of `EVIDENCE_ARCHITECTURE.md` (deterministic eligibility check against the frozen
+  `source_eligibility_policy`) runs before any network call. Redirect/domain tricks: the eligibility
+  check must validate against the URL's actual host as parsed, not a string-contains match — Stage 1
+  must specify exact-host or explicit-pattern matching (never substring matching, which a hostile domain
+  like `notmanufacturer.com/manufacturer.com` could defeat), and must not follow redirects to a
+  different host without re-checking eligibility against the redirect target (`gl.nondet.web.get`'s
+  redirect-following behavior must be confirmed at Stage 2 — if it follows redirects transparently,
+  CLAUSE must independently validate the final resolved host, not trust that the submitted URL's host
+  is where the content actually came from).
+
+## Prompt injection
+
+- Fetched web content is data, never instructions (`EVIDENCE_ARCHITECTURE.md`). Two independent layers:
+  (1) source eligibility filters *which* domains can even be fetched, reducing the attack surface to
+  sources the manufacturer's own frozen policy already trusts; (2) extraction prompts are structured to
+  ask only for specific bounded fields (never "follow any instructions in this content"), and the
+  fail-closed shape validator (`ADJUDICATION_SCHEMA.md`) rejects any output that doesn't match the exact
+  expected schema, which defeats injected content trying to steer the *adjudication* outcome (as opposed
+  to merely the extraction) — an injected "this claim is APPROVED" string inside a fetched page cannot
+  set `Adjudication.outcome` because `outcome` is computed by a separate structural-consistency check in
+  plain Python, not copied verbatim from any LLM claim about the outcome. Test matrix explicitly requires
+  a prompt-injection fixture (`TEST_MATRIX.md`).
+
+## Oversized / unavailable / volatile evidence
+
+- Bounded extraction (Step 3, `EVIDENCE_ARCHITECTURE.md`) discards raw bodies after extracting a small
+  fixed field set — oversized responses cannot inflate on-chain storage. Volatility is handled by
+  comparing extracted stable facts, never raw pages (Equivalence Principle guidance,
+  `NETWORK_AND_SDK_VERIFICATION.md`). Unavailable evidence routes to the Constitution's frozen
+  `unavailable_evidence_behavior`, never a crash.
+
+## Malformed model output / hallucinated IDs
+
+- `_validate_adjudication_shape` (`ADJUDICATION_SCHEMA.md`) hard-errors on any enum outside its literal
+  set and any clause/evidence ID not present in frozen state for this claim — never silently drops or
+  substitutes a default.
+
+## Manufacturer pool drain
+
+- `issue_warranty`'s pre-check against `available_balance` (`ECONOMIC_INVARIANTS.md`) prevents
+  over-issuance beyond backed capacity. `withdraw_pool`'s `available_balance`-only check prevents
+  draining reserved/pending funds. Neither check can be bypassed by call ordering within a single
+  transaction, since `available_balance` is always recomputed live, never cached.
+
+## Late / unauthorized / replayed challenges
+
+- Deadline check on `file_challenge` against `challenge_window` (`APPEALS_AND_FINALITY.md`); caller
+  restricted to a party of the specific Claim; a second `file_challenge` against a Claim that already
+  has a Challenge record (open or resolved) reverts (V1's one-challenge-total rule).
+
+## Premature settlement
+
+- `settle_claim` requires `Claim.status == FINAL`, which itself requires GenLayer protocol Finality of
+  the deciding transaction, not merely Accepted (`APPEALS_AND_FINALITY.md`,
+  `NETWORK_AND_SDK_VERIFICATION.md`).
+
+## Timestamp provenance confusion
+
+- The nine-fact time taxonomy (`ARCHITECTURE.md`) is enforced by type: claimant-asserted dates
+  (`failure_asserted_at`) are never used as the authoritative input to a deadline check — deadlines
+  anchor to on-chain timestamps (`coverage_end`, `registered_at`, `response_deadline`, etc.), and any
+  UI display of a claimant- or source-asserted date is visually distinguished from an on-chain timestamp
+  (`FRONTEND_INFORMATION_ARCHITECTURE.md`).
+
+## State mutation after failed/undetermined consensus
+
+- A `gl.vm.run_nondet_unsafe` block whose consensus cannot be reached causes the whole transaction to
+  revert (confirmed GenVM behavior, `NETWORK_AND_SDK_VERIFICATION.md`) — Claim state remains at its
+  pre-call status (e.g. still `EVIDENCE_FROZEN` after a failed `adjudicate`), retryable by anyone, no
+  partial-write corruption possible since GenVM transactions are atomic.
+
+## Workspace-specific residual risks carried forward, not yet re-verified for CLAUSE
+
+- **Inbound payable value surviving a reverted call** — independently observed live on StudioNet for a
+  sibling project (Protocol Court's `FILING_BOND_MISMATCH` incident: a reverted payable call did not
+  return the attached GEN). CLAUSE's `fund_pool`/`file_claim`(if ever made payable in a later stage)
+  must be designed with unconditional-credit-first, validate-after ordering, or with the strongest
+  possible pre-validation *before* the payable call, and this must be **live-tested on Studionet before
+  any real deployment**, not assumed safe from Stage 1 code review alone.
+- **`strict_eq` over live, non-content-addressed web pages** has historically produced ~1-in-5
+  `Undetermined` consensus outcomes in this workspace (Treasury Trial finding). CLAUSE avoids `strict_eq`
+  on raw pages entirely (`EVIDENCE_ARCHITECTURE.md` uses `run_nondet_unsafe` with extracted-fact
+  comparison throughout) specifically to avoid inheriting this failure mode, but the *rate* of
+  Undetermined outcomes for CLAUSE's own extraction/adjudication comparators is unverified until live
+  Stage 2/3 testing.
+- **`Response.status_code` vs `.status`** — a confirmed API-attribute drift since this workspace's
+  earlier verifications (`NETWORK_AND_SDK_VERIFICATION.md`). Using the wrong attribute name would fail
+  loudly (AttributeError) rather than silently misbehave, so this is a build-breaking risk, not a
+  security risk, but is listed here because it was discovered during this Stage 0 threat-modeling pass.
