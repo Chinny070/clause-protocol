@@ -126,3 +126,41 @@ Adjudication has no independent state machine beyond `superseded: bool`, flipped
 resolves REVERSED and produces a corrected Adjudication. Challenge: `OPEN -> {UPHELD, REVERSED, REMAND,
 INVALID_CHALLENGE}`, all four terminal for that specific Challenge record (a REMAND's *follow-up*
 adjudication step is a new Adjudication, not a reopening of the same Challenge).
+
+## Stage 2 as-implemented: Claim and EvidenceRecord
+
+Simpler than the original full sketch above, since Stage 2 stops at frozen evidence — no
+`ADJUDICATING`/`DECIDED`/`CHALLENGE_WINDOW`/`FINAL`/`SETTLED` states exist yet:
+
+```
+RESPONSE_WINDOW -> ACCEPTED                       (respond_to_claim("ACCEPT"), before deadline)
+RESPONSE_WINDOW -> DISPUTED                       (respond_to_claim("DISPUTE"), before deadline)
+RESPONSE_WINDOW -> DISPUTED  (derived, read-time)  (now > response_deadline, no response — silence
+                                                     defaults to DISPUTED, not ACCEPTED)
+DISPUTED -> EVIDENCE_FROZEN                        (freeze_evidence, permissionless)
+```
+
+`ACCEPTED` and `EVIDENCE_FROZEN` are the two Stage-2-terminal states — `file_claim` only
+allows a new claim against a warranty once every prior claim on it has reached one of these
+two. Matches `file_claim`/`respond_to_claim`/`_effective_claim_status` in
+`contracts/clause_protocol.py` exactly.
+
+`EvidenceRecord`: `eligibility` is decided once, at `submit_evidence` time, and never
+re-evaluated (`PENDING`-shaped only in the sense that `retrieval_status` starts `""` and is
+set exactly once by `freeze_evidence`, guarded by `retrieval_status != ""` as the per-record
+idempotency check — there is no separate stored `"PENDING"` string literal for eligibility
+itself; `ELIGIBLE`/`INELIGIBLE` is immediate and final at submission).
+
+```
+submit_evidence -> eligibility decided immediately (ELIGIBLE | INELIGIBLE), retrieval_status = ""
+  ELIGIBLE   --freeze_evidence--> retrieval_status in {AVAILABLE, UNAVAILABLE, FETCH_FAILED,
+                                   RENDER_FAILED, INSUFFICIENT}, frozen_at set, immutable
+  INELIGIBLE --freeze_evidence--> skipped unconditionally, retrieval_status stays "", frozen_at stays 0
+```
+
+No write method exists that takes an existing `claim_id` or `evidence_id` and mutates a
+record's already-committed fields outside these two documented transitions each — proven in
+`tests/direct/test_stage2_freeze_and_fingerprint.py` and the schema-derived audit in
+`tests/direct/test_constitution_hardening.py` (extended in the Stage 2 pass to cover
+`file_claim`/`respond_to_claim`/`submit_evidence`/`freeze_evidence` against the frozen
+Constitution, and by direct assertion for `EvidenceRecord` post-freeze immutability).

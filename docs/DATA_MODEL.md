@@ -191,6 +191,23 @@ class EvidenceRecord:
 
 Full retrieval/freeze pipeline and equivalence strategy in `EVIDENCE_ARCHITECTURE.md`.
 
+> **Stage 2 implementation notes** (see `STAGE_2_VERIFICATION.md` for full deviation records):
+> (1) IDs are `u32` (Stage 1's own precedent — `genvm-lint lint` rejects `u64` TreeMap keys).
+> (2) `Claim` as implemented omits `description`, `dispute_clause_ids`, `adjudication_id`,
+> `challenge_ids`, `final_outcome`, `settlement_amount`, `settled_at`, `withdrawn_at` — every
+> one of those belongs to Stage 3/4 (semantic verdict, appeals, settlement), which Stage 2 must
+> not implement; `targeted_clause_ids_json` (canonical JSON, Stage 1's array-canonicalization
+> pattern) and `constitution_id`/`constitution_fingerprint` (the immutable governing-reference
+> capture, item 2's explicit requirement) are added in their place. `manufacturer_response` is
+> `"" | "ACCEPT" | "DISPUTE"` (not `ACCEPT_NO_CONTEST` — shortened, same meaning, matches the
+> brief's own item 4 wording). (3) `EvidenceRecord` as implemented omits `source_metadata`
+> (replaced by the more specific `host` + `retrieval_method`, both independently useful for
+> the frontend and for eligibility auditing) and drops `CONFLICTING` from the retrieval-status
+> vocabulary — see `EVIDENCE_ARCHITECTURE.md`'s Stage 2 addendum for why a leader/validator
+> split never actually reaches contract code as a labelable status. `extracted_facts` is named
+> `extracted_content` in the implementation (plain bounded text, not a structured facts
+> object — Stage 2 does no LLM-based fact extraction, only mechanical truncation).
+
 ## Adjudication
 
 Exact schema (validated, not just typed) is in `ADJUDICATION_SCHEMA.md`. Storage shape:

@@ -115,3 +115,34 @@ Grouped exactly per the build brief's five categories, each row a planned test, 
 - Unavailable-evidence claim -> UI clearly shows `EVIDENCE_UNAVAILABLE` as a distinct, non-error state.
 - Mobile viewport -> Passport/Claim Timeline/Resolution Receipt all readable without horizontal scroll.
 - Public-read: every Explorer page correctly reachable and correct with zero wallet connected.
+
+## Stage 2 status — §1–2 (Claims, Evidence) implemented; §6–7 (live network, frontend) still pending
+
+Sections §1 (authorization/immutability/timestamps/reservations, Stage 1) and §2 (evidence
+categories originally sketched for a later stage) are now executed, not just planned, across:
+
+- `tests/direct/test_stage2_claims.py` (16 tests) — valid/unauthorized/duplicate/boundary
+  claim filing, exclusion-as-covered rejection, coverage-window timing.
+- `tests/direct/test_stage2_response.py` (11 tests) — accept/dispute, unauthorized/duplicate/
+  late response, exact-deadline boundary, silence-defaults-to-DISPUTED, response immutability.
+- `tests/direct/test_stage2_source_eligibility.py` (18 tests) — exact host, wildcard
+  subdomain, bare-vs-subdomain non-match, domain-suffix and prefix lookalike attacks, scheme
+  rejection, malformed/empty/oversized URL, duplicate URL, category validation.
+- `tests/direct/test_stage2_evidence_retrieval.py` (10 tests) — static GET and rendered
+  paths, 404/5xx/empty/whitespace-only/oversized bodies, unreachable host, ineligible-never-
+  retrieved, multiple independent records per claim.
+- `tests/direct/test_stage2_freeze_and_fingerprint.py` (10 tests) — valid/duplicate freeze,
+  permissionless trigger, pre-dispute rejection, post-freeze immutability, post-freeze
+  submission rejection, fingerprint recomputed from first principles (not via the contract's
+  own helper), fingerprint content-sensitivity, unset-before-freeze.
+- `tests/direct/test_stage2_prompt_injection.py` (4 tests) — adversarial content stored
+  inert, no second fetch of an attacker-named URL, eligibility not bypassable via content,
+  category strings can't force a retrieval-method bypass.
+- `tests/direct/test_constitution_hardening.py` — extended to include the four new Stage 2
+  write methods in its schema-derived, non-hardcoded audit.
+
+**§6 (real StudioNet/live-network deployment) and §7 (frontend) remain entirely unexecuted**,
+per Stage 2's explicit no-frontend/no-production-deployment scope. A local GenLayer network
+simulator (`glsim`) was confirmed to boot and serve a working JSON-RPC endpoint during this
+stage, but a full scripted deploy-and-exercise run against it was not completed this session —
+see `STAGE_2_VERIFICATION.md` for the exact state of that unresolved item.

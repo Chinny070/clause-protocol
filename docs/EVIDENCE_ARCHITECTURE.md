@@ -119,3 +119,61 @@ bounded at the extraction step (Step 3) — extraction never returns more than a
 fields; the raw oversized body is discarded after extraction, never stored. Disallowed sources are
 caught at Step 1 and never reach retrieval, which is also the primary defense against a URL crafted to
 serve a resource-exhausting response.
+
+## Stage 2 addendum — as actually implemented
+
+Verified APIs this section relies on are in `docs/STAGE_2_WEB_API_VERIFICATION.md`.
+
+**Source eligibility mini-DSL.** `WarrantyConstitution.source_eligibility_policy` is a
+comma-separated list of host rules, parsed by `_parse_source_policy_hosts`/`_host_allowed` in
+`contracts/clause_protocol.py`: a bare host (`"manufacturer.example"`) matches that exact host
+only — never a subdomain, never a suffix-lookalike (`manufacturer.example.attacker.example`
+does not match, since matching is exact-string or explicit-suffix-with-a-dot-boundary, never
+substring/prefix containment); a `"*.manufacturer.example"` rule matches any subdomain but not
+the bare domain itself. Scheme is fixed to `https` only for Stage 2, not yet
+per-constitution-configurable. Parsing uses `urllib.parse.urlsplit(...).hostname`, which
+lowercases and strips port/userinfo automatically — this is what defeats the domain-boundary
+and lookalike attacks structurally, not a manual string check that could be gotten wrong.
+
+**GET vs render strategy is deterministic and frozen at submission time.**
+`_retrieval_method_for_category`: a category name ending in `"_RENDERED"` requires
+`gl.nondet.web.render(url, mode="text")`; every other category uses `gl.nondet.web.get(url)`.
+This is a pure function of the already-frozen category string — never of live page content —
+so leader and validator can never disagree about which mechanism to use, and the choice is
+stored on the `EvidenceRecord` itself (`retrieval_method`) at submission time so it cannot
+drift even in principle between submission and freeze.
+
+**Ineligible evidence is recorded, not reverted.** Matches the original design intent above
+exactly: `submit_evidence` never reverts merely because a well-formed URL fails the host
+policy — it stores the record with `eligibility = INELIGIBLE` and `retrieval_status = ""`
+permanently; `freeze_evidence` skips such records unconditionally. Structurally malformed
+input (empty URL, missing scheme/host, oversized URL, unknown category, duplicate URL) does
+revert — those are input-validation failures, not eligibility outcomes.
+
+**`CONFLICTING` is not a status CLAUSE's own code can ever produce**, unlike the original
+sketch in `docs/DATA_MODEL.md`. A leader/validator split on extracted content is resolved by
+GenVM's own leader-rotation/`Undetermined` machinery before any value returns to contract
+code — `run_nondet_unsafe` either returns the agreed value or the whole transaction reverts;
+there is no third code path where the contract observes "both sides answered, but differed."
+The implemented vocabulary is `AVAILABLE | UNAVAILABLE | FETCH_FAILED | RENDER_FAILED |
+INSUFFICIENT` — narrower than sketched, honestly so.
+
+**Bounded extraction is mechanical, not LLM-based.** `_fetch_evidence_once` calls no
+`gl.nondet.exec_prompt` — content is `.strip()[:2000]` (`_MAX_EXTRACT_LEN`), nothing more. This
+was a deliberate Stage 2 scope choice (semantic extraction/summarization is adjudication-
+adjacent judgment, reserved for Stage 3) and has a useful side effect for the prompt-injection
+threat model: with no LLM in the Stage 2 pipeline at all, injected text has no prompt to
+inject into — it is inert stored bytes by construction, not merely by policy. See
+`tests/direct/test_stage2_prompt_injection.py` for the adversarial proof.
+
+**Evidence freeze is one method (`freeze_evidence`) processing every eligible pending record
+for a claim in one transaction** — still architecturally separate from, and strictly prior to,
+any Stage 3 adjudication call (item 12's "Claim → Evidence submission → Retrieval → Frozen
+Evidence → STOP" boundary). Idempotent per record (`retrieval_status != PENDING` skip) and
+claim-level (`evidence_frozen_at == 0` guard, checked before the loop even starts).
+
+**Evidence fingerprint** binds `evidence_id`, `claim_id`, `original_url` (as submitted, not
+re-normalized), `category`, `retrieval_status`, and the bounded `content` — computed via the
+same Stage 1 `_canonical_json`/`_fingerprint` helpers, not a separate or weaker encoding.
+Documented and independently re-derived from first principles in
+`tests/direct/test_stage2_freeze_and_fingerprint.py`.

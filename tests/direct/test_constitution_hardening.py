@@ -13,7 +13,10 @@ import subprocess
 
 import pytest
 
-from helpers import CONTRACT_PATH, ONE_GEN, create_constitution, fund, issue
+from helpers import (
+    CONTRACT_PATH, ONE_GEN, create_constitution, create_constitution_stage2, file_claim,
+    freeze_evidence, fund, issue, respond, submit_evidence,
+)
 
 
 def _load_schema() -> dict:
@@ -46,6 +49,13 @@ EXPECTED_WRITE_METHODS = {
     "issue_warranty",
     "cancel_warranty",
     "release_expired_reservation",
+    # Stage 2 additions (docs/STATE_MACHINES.md Claim/Evidence lifecycle) - none of these
+    # take a constitution_id and mutate that record; each is exercised below for the same
+    # frozen-constitution-untouched guarantee as every Stage 1 write method.
+    "file_claim",
+    "respond_to_claim",
+    "submit_evidence",
+    "freeze_evidence",
 }
 
 
@@ -129,6 +139,25 @@ def test_every_non_constitution_write_method_leaves_frozen_constitution_untouche
     direct_vm.warp(_iso(now + 20))
     contract.release_expired_reservation(short_warranty_id)
     assert_unchanged("release_expired_reservation")
+
+    # file_claim / respond_to_claim / submit_evidence / freeze_evidence (Stage 2): none of
+    # these take a constitution_id, but each is exercised here for the same guarantee. Needs
+    # a fresh, still-ACTIVE warranty since `warranty_id` was cancelled above.
+    direct_vm.sender = manufacturer
+    claim_warranty_id = issue(
+        contract, direct_vm, program_id, constitution_id, manufacturer, other_holder,
+        max_remedy=1 * ONE_GEN, commitment_seed=4,
+    )
+    assert_unchanged("issue_warranty (fourth issuance, for the claim exercises below)")
+    claim_id = file_claim(contract, direct_vm, claim_warranty_id, other_holder)
+    assert_unchanged("file_claim")
+    respond(contract, direct_vm, claim_id, manufacturer, "DISPUTE")
+    assert_unchanged("respond_to_claim")
+    direct_vm.mock_web(r"https://docs\.genlayer\.com/hardening-evidence", {"status": 200, "body": "Evidence text."})
+    evidence_id = submit_evidence(contract, direct_vm, claim_id, other_holder, "https://docs.genlayer.com/hardening-evidence", "RECEIPT")
+    assert_unchanged("submit_evidence")
+    freeze_evidence(contract, direct_vm, claim_id, other_holder)
+    assert_unchanged("freeze_evidence")
 
     # retire_program is terminal - exercised last.
     direct_vm.sender = manufacturer

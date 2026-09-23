@@ -103,3 +103,51 @@ def issue(
         coverage_end=end,
         max_deterministic_remedy=max_remedy,
     )
+
+
+# --- Stage 2: Claims + Evidence Locker -----------------------------------------------------
+
+# A source-eligibility policy under CLAUSE's Stage 2 mini-DSL (comma-separated host rules,
+# see contracts/clause_protocol.py::_parse_source_policy_hosts / _host_allowed).
+STAGE2_SOURCE_POLICY = "docs.genlayer.com,*.manufacturer.example"
+STAGE2_EVIDENCE_CATEGORIES = ["RECEIPT", "PHOTO", "MANUFACTURER_PAGE_RENDERED"]
+
+
+def create_constitution_stage2(contract, program_id, **overrides):
+    """Same as create_constitution but defaulted to a real, testable Stage 2 source policy
+    and category set (one GET-style category, one *_RENDERED category)."""
+    overrides.setdefault("source_policy", STAGE2_SOURCE_POLICY)
+    overrides.setdefault("evidence_categories", STAGE2_EVIDENCE_CATEGORIES)
+    return create_constitution(contract, program_id, **overrides)
+
+
+def file_claim(
+    contract,
+    direct_vm,
+    warranty_id,
+    holder,
+    targeted_clause_ids=None,
+    failure_asserted_at=None,
+):
+    direct_vm.sender = holder
+    now = int(contract.now())
+    return contract.file_claim(
+        warranty_id=warranty_id,
+        targeted_clause_ids=targeted_clause_ids if targeted_clause_ids is not None else ["C-001"],
+        failure_asserted_at=failure_asserted_at if failure_asserted_at is not None else now,
+    )
+
+
+def respond(contract, direct_vm, claim_id, manufacturer, decision):
+    direct_vm.sender = manufacturer
+    contract.respond_to_claim(claim_id=claim_id, decision=decision)
+
+
+def submit_evidence(contract, direct_vm, claim_id, submitter, url, category="RECEIPT"):
+    direct_vm.sender = submitter
+    return contract.submit_evidence(claim_id=claim_id, original_url=url, category=category)
+
+
+def freeze_evidence(contract, direct_vm, claim_id, caller):
+    direct_vm.sender = caller
+    contract.freeze_evidence(claim_id=claim_id)

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import datetime
 import hashlib
 import json
+import urllib.parse
 
 # CLAUSE Stage 1 - Deterministic Foundation.
 #
@@ -72,6 +73,118 @@ _CLAUSE_ROW_KEYS = frozenset({"clause_id", "text"})
 # Sanity ceiling only - not an actuarial/solvency judgment, just an overflow guard for u256
 # arithmetic and for a single-warranty remedy relative to a pool. Ten million GEN.
 _MAX_REMEDY_ATOMS = u256(10_000_000 * 10**18)
+
+# ----------------------------------------------------------------------------------------
+# Stage 2 - Claims + Evidence Locker. See docs/STAGE_2_WEB_API_VERIFICATION.md for the API
+# facts this section relies on, and docs/EVIDENCE_ARCHITECTURE.md for the pipeline design.
+# No semantic adjudication (COVERED/NOT_COVERED) exists anywhere below - Stage 3 scope only.
+# ----------------------------------------------------------------------------------------
+
+CLAIM_RESPONSE_WINDOW = "RESPONSE_WINDOW"
+CLAIM_ACCEPTED = "ACCEPTED"
+CLAIM_DISPUTED = "DISPUTED"
+CLAIM_EVIDENCE_FROZEN = "EVIDENCE_FROZEN"
+
+RESPONSE_ACCEPT = "ACCEPT"
+RESPONSE_DISPUTE = "DISPUTE"
+_RESPONSE_DECISIONS = (RESPONSE_ACCEPT, RESPONSE_DISPUTE)
+
+EVIDENCE_ELIGIBLE = "ELIGIBLE"
+EVIDENCE_INELIGIBLE = "INELIGIBLE"
+
+# Retrieval outcomes a leader_fn/validator_fn pair can actually produce. "CONFLICTING" from
+# docs/DATA_MODEL.md's original sketch is deliberately not in this list: a leader/validator
+# split on extracted content is resolved by GenVM's own leader-rotation/Undetermined
+# machinery (docs/STAGE_2_WEB_API_VERIFICATION.md) before any status value ever reaches
+# storage - CLAUSE's own code never observes or labels a "both sides answered, but differed"
+# case, so it cannot honestly claim to produce that status itself.
+RETRIEVAL_PENDING = ""
+RETRIEVAL_AVAILABLE = "AVAILABLE"
+RETRIEVAL_UNAVAILABLE = "UNAVAILABLE"
+RETRIEVAL_FETCH_FAILED = "FETCH_FAILED"
+RETRIEVAL_RENDER_FAILED = "RENDER_FAILED"
+RETRIEVAL_INSUFFICIENT = "INSUFFICIENT"
+
+_RETRIEVAL_METHOD_GET = "GET"
+_RETRIEVAL_METHOD_RENDER = "RENDER"
+
+# Bounded evidence extraction ceiling (item 10) - a deterministic, documented limit, not a
+# business judgment about how much text matters.
+_MAX_EXTRACT_LEN = 2000
+_MAX_URL_LEN = 500
+
+# CLAUSE Stage 2's source-eligibility mini-DSL for WarrantyConstitution.source_eligibility_policy:
+# a comma-separated list of host rules. A bare host (e.g. "manufacturer.com") matches that
+# exact host only, never a subdomain and never a suffix-lookalike ("manufacturer.com.evil.example"
+# does NOT match - see _host_allowed). A "*.manufacturer.com" rule matches any subdomain of
+# manufacturer.com but not the bare domain itself; list both forms if both should be allowed.
+# Scheme is fixed at "https" only for Stage 2 - not per-constitution-configurable yet.
+_ALLOWED_SCHEME = "https"
+
+
+def _parse_source_policy_hosts(policy: str) -> list:
+    return [h.strip().lower() for h in policy.split(",") if h.strip() != ""]
+
+
+def _host_allowed(host: str, policy_hosts: list) -> bool:
+    host = host.lower()
+    for rule in policy_hosts:
+        if rule.startswith("*."):
+            base = rule[2:]
+            if host != base and host.endswith("." + base):
+                return True
+        elif host == rule:
+            return True
+    return False
+
+
+def _normalize_url_for_dedupe(scheme: str, host: str, port, path: str, query: str) -> str:
+    port_part = "" if port is None else f":{port}"
+    query_part = "" if query == "" else f"?{query}"
+    return f"{scheme.lower()}://{host.lower()}{port_part}{path}{query_part}"
+
+
+def _retrieval_method_for_category(category: str) -> str:
+    """Deterministic, documented, reproducible by every validator independently: a category
+    name ending in the frozen suffix "_RENDERED" requires browser rendering; every other
+    category uses a plain static fetch. This is a Stage 2 convention operating purely on the
+    already-frozen category string - never on live page content - so leader and validator can
+    never disagree about which retrieval mechanism to use."""
+    if category.endswith("_RENDERED"):
+        return _RETRIEVAL_METHOD_RENDER
+    return _RETRIEVAL_METHOD_GET
+
+
+def _bound_text(text: str) -> str:
+    return text.strip()[:_MAX_EXTRACT_LEN]
+
+
+def _fetch_evidence_once(url: str, method: str) -> dict:
+    """Runs on BOTH leader and validator (called independently by each) - must be a pure
+    function of (url, method) only, touching no contract storage. Fetched content is treated
+    as untrusted data throughout: this function never interprets it, never executes it as
+    instructions, and never lets it influence which branch of this function runs (docs/
+    EVIDENCE_ARCHITECTURE.md, docs/THREAT_MODEL.md prompt-injection sections)."""
+    try:
+        if method == _RETRIEVAL_METHOD_RENDER:
+            text = gl.nondet.web.render(url, mode="text")
+            text = text or ""
+            if not text.strip():
+                return {"status": RETRIEVAL_INSUFFICIENT, "content": ""}
+            return {"status": RETRIEVAL_AVAILABLE, "content": _bound_text(text)}
+        else:
+            response = gl.nondet.web.get(url)
+            if response.status >= 400:
+                return {"status": RETRIEVAL_FETCH_FAILED, "content": ""}
+            body = response.body
+            text = (body or b"").decode("utf-8", errors="replace")
+            if not text.strip():
+                return {"status": RETRIEVAL_INSUFFICIENT, "content": ""}
+            return {"status": RETRIEVAL_AVAILABLE, "content": _bound_text(text)}
+    except Exception:
+        if method == _RETRIEVAL_METHOD_RENDER:
+            return {"status": RETRIEVAL_RENDER_FAILED, "content": ""}
+        return {"status": RETRIEVAL_UNAVAILABLE, "content": ""}
 
 
 def _coerce_address(val) -> Address:
@@ -322,6 +435,49 @@ class Reservation:
     released_at: u64
 
 
+@allow_storage
+@dataclass
+class Claim:
+    claim_id: u32
+    warranty_id: u32
+    program_id: u32
+    holder: Address
+    manufacturer: Address
+    # Captured immutably at filing time so a later constitution edit (a NEW constitution
+    # under the same program) can never redirect an already-filed claim - docs/STATE_MACHINES.md,
+    # docs/WARRANTY_CONSTITUTION.md anti-rewrite section.
+    constitution_id: u32
+    constitution_fingerprint: bytes
+    failure_asserted_at: u64  # claimant assertion, NOT authoritative - never used in any deadline check
+    targeted_clause_ids_json: str  # canonical (sorted) list[str], all COVERED clauses
+    filed_at: u64
+    response_deadline: u64
+    manufacturer_response: str  # "" | "ACCEPT" | "DISPUTE"
+    responded_at: u64
+    evidence_frozen_at: u64
+    status: str
+
+
+@allow_storage
+@dataclass
+class EvidenceRecord:
+    evidence_id: u32
+    claim_id: u32
+    submitter: Address
+    original_url: str
+    category: str
+    host: str
+    retrieval_method: str  # "GET" | "RENDER", fixed at submission time
+    submitted_at: u64
+    eligibility: str  # "ELIGIBLE" | "INELIGIBLE"
+    retrieval_status: str  # "" (not yet processed) | AVAILABLE | UNAVAILABLE | FETCH_FAILED | RENDER_FAILED | INSUFFICIENT
+    retrieved_at: u64
+    frozen_at: u64
+    extracted_content: str  # bounded, "" until retrieved
+    fingerprint: bytes  # b"" until retrieved
+    available: bool
+
+
 class ClauseProtocol(gl.Contract):
     programs: TreeMap[u32, WarrantyProgram]
     constitutions: TreeMap[u32, WarrantyConstitution]
@@ -334,10 +490,18 @@ class ClauseProtocol(gl.Contract):
     program_ids_json: str
     passport_ids_by_program_json: TreeMap[u32, str]
 
+    claims: TreeMap[u32, Claim]
+    claim_ids_by_warranty_json: TreeMap[u32, str]
+    evidence: TreeMap[u32, EvidenceRecord]
+    evidence_ids_by_claim_json: TreeMap[u32, str]
+    evidence_urls_by_claim_json: TreeMap[u32, str]  # normalized-URL set, for duplicate rejection
+
     next_program_id: u32
     next_constitution_id: u32
     next_passport_id: u32
     next_reservation_id: u32
+    next_claim_id: u32
+    next_evidence_id: u32
 
     def __init__(self):
         self.program_ids_json = "[]"
@@ -345,6 +509,8 @@ class ClauseProtocol(gl.Contract):
         self.next_constitution_id = u32(1)
         self.next_passport_id = u32(1)
         self.next_reservation_id = u32(1)
+        self.next_claim_id = u32(1)
+        self.next_evidence_id = u32(1)
 
     # ------------------------------------------------------------------
     # WarrantyProgram
@@ -828,6 +994,306 @@ class ClauseProtocol(gl.Contract):
         """Exposed for the frontend to display server-observed protocol time next to
         deadlines without needing its own clock skew handling."""
         return _now()
+
+    # ------------------------------------------------------------------
+    # Claim (Stage 2)
+    # ------------------------------------------------------------------
+
+    def _require_claim(self, claim_id: u32) -> Claim:
+        claim = self.claims.get(claim_id)
+        _require(claim is not None, "unknown claim")
+        return claim
+
+    def _effective_claim_status(self, claim: Claim) -> str:
+        """A silent manufacturer (no response before the deadline) defaults to DISPUTED, not
+        ACCEPTED - a manufacturer who says nothing does not get the benefit of a no-contest.
+        Derived at read time, matching Stage 1's passport-expiry precedent; never a separate
+        mutation a caller could forget to trigger."""
+        if claim.status == CLAIM_RESPONSE_WINDOW and _now() > claim.response_deadline:
+            return CLAIM_DISPUTED
+        return claim.status
+
+    @gl.public.write
+    def file_claim(self, warranty_id: u32, targeted_clause_ids: list, failure_asserted_at: u64) -> u32:
+        _require(
+            isinstance(failure_asserted_at, int) and not isinstance(failure_asserted_at, bool),
+            "failure_asserted_at must be an integer timestamp",
+        )
+        passport = self.passports.get(warranty_id)
+        _require(passport is not None, "unknown warranty")
+        _require(_sender().as_bytes == passport.holder.as_bytes, "caller is not this warranty's holder")
+        # Deliberately NOT `_effective_status(passport) == PASSPORT_ACTIVE`: a passport reads
+        # EXPIRED once now >= coverage_end, but the whole point of the frozen
+        # `claim_deadline_s` grace window (checked explicitly below) is to let a holder file
+        # shortly AFTER coverage ends. Only a genuinely CANCELLED warranty is unclaimable.
+        _require(passport.status != PASSPORT_CANCELLED, "warranty is cancelled")
+
+        constitution = self.constitutions.get(passport.constitution_id)
+        _require(constitution is not None, "unknown governing constitution")
+
+        now = _now()
+        _require(now >= passport.coverage_start, "claim filed before coverage_start")
+        _require(
+            now <= int(passport.coverage_end) + int(constitution.claim_deadline_s),
+            "claim filed after the frozen claim deadline",
+        )
+
+        _require(isinstance(targeted_clause_ids, list), "targeted_clause_ids must be a list")
+        _require(len(targeted_clause_ids) >= 1, "at least one targeted covered clause is required")
+        seen = set()
+        for clause_id in targeted_clause_ids:
+            _require(isinstance(clause_id, str), "targeted clause_id must be a string")
+            _require(clause_id not in seen, "duplicate targeted clause_id")
+            seen.add(clause_id)
+            record = self.clauses.get(f"{int(passport.constitution_id)}:{clause_id}")
+            _require(record is not None, "targeted clause_id does not exist on the governing constitution")
+            _require(record.kind == CLAUSE_COVERED, "targeted clause_id must be a COVERED clause, not an exclusion")
+
+        # No open (RESPONSE_WINDOW/DISPUTED, including silently-expired-to-DISPUTED) claim may
+        # already exist against this warranty - a second claim is only allowed once every
+        # prior claim on this warranty has reached a Stage-2-terminal state (ACCEPTED or
+        # EVIDENCE_FROZEN).
+        existing_ids_json = self.claim_ids_by_warranty_json.get(warranty_id, "[]")
+        for existing_id in json.loads(existing_ids_json):
+            existing = self.claims[u32(existing_id)]
+            existing_status = self._effective_claim_status(existing)
+            _require(
+                existing_status in (CLAIM_ACCEPTED, CLAIM_EVIDENCE_FROZEN),
+                "an unresolved claim already exists for this warranty",
+            )
+
+        claim_id = self.next_claim_id
+        self.next_claim_id = u32(claim_id + 1)
+
+        sorted_clause_ids = sorted(seen)
+        self.claims[claim_id] = Claim(
+            claim_id=claim_id,
+            warranty_id=warranty_id,
+            program_id=passport.program_id,
+            holder=passport.holder,
+            manufacturer=passport.manufacturer,
+            constitution_id=passport.constitution_id,
+            constitution_fingerprint=constitution.fingerprint,
+            failure_asserted_at=failure_asserted_at,
+            targeted_clause_ids_json=_canonical_json(sorted_clause_ids),
+            filed_at=now,
+            response_deadline=u64(now + constitution.manufacturer_response_period_s),
+            manufacturer_response="",
+            responded_at=u64(0),
+            evidence_frozen_at=u64(0),
+            status=CLAIM_RESPONSE_WINDOW,
+        )
+
+        existing_ids = json.loads(existing_ids_json)
+        existing_ids.append(int(claim_id))
+        self.claim_ids_by_warranty_json[warranty_id] = _canonical_json(existing_ids)
+        self.evidence_ids_by_claim_json[claim_id] = "[]"
+        self.evidence_urls_by_claim_json[claim_id] = "[]"
+
+        return claim_id
+
+    @gl.public.write
+    def respond_to_claim(self, claim_id: u32, decision: str) -> None:
+        claim = self._require_claim(claim_id)
+        _require(_sender().as_bytes == claim.manufacturer.as_bytes, "caller is not this claim's manufacturer")
+        _require(claim.manufacturer_response == "", "manufacturer has already responded (responses are immutable)")
+        _require(_now() <= claim.response_deadline, "response window has closed")
+        _require(decision in _RESPONSE_DECISIONS, "decision must be one of " + str(_RESPONSE_DECISIONS))
+
+        claim.manufacturer_response = decision
+        claim.responded_at = _now()
+        claim.status = CLAIM_ACCEPTED if decision == RESPONSE_ACCEPT else CLAIM_DISPUTED
+
+    @gl.public.view
+    def get_claim(self, claim_id: u32) -> dict:
+        claim = self.claims.get(claim_id)
+        if claim is None:
+            return {}
+        return {
+            "claim_id": int(claim.claim_id),
+            "warranty_id": int(claim.warranty_id),
+            "program_id": int(claim.program_id),
+            "holder": claim.holder.as_hex,
+            "manufacturer": claim.manufacturer.as_hex,
+            "constitution_id": int(claim.constitution_id),
+            "constitution_fingerprint": claim.constitution_fingerprint.hex(),
+            "failure_asserted_at": int(claim.failure_asserted_at),
+            "targeted_clause_ids": json.loads(claim.targeted_clause_ids_json),
+            "filed_at": int(claim.filed_at),
+            "response_deadline": int(claim.response_deadline),
+            "manufacturer_response": claim.manufacturer_response,
+            "responded_at": int(claim.responded_at),
+            "evidence_frozen_at": int(claim.evidence_frozen_at),
+            "status": self._effective_claim_status(claim),
+        }
+
+    @gl.public.view
+    def list_claim_ids_for_warranty(self, warranty_id: u32) -> list:
+        ids_json = self.claim_ids_by_warranty_json.get(warranty_id)
+        return [] if ids_json is None else json.loads(ids_json)
+
+    # ------------------------------------------------------------------
+    # Evidence Locker (Stage 2)
+    # ------------------------------------------------------------------
+
+    @gl.public.write
+    def submit_evidence(self, claim_id: u32, original_url: str, category: str) -> u32:
+        claim = self._require_claim(claim_id)
+        caller = _sender()
+        _require(
+            caller.as_bytes == claim.holder.as_bytes or caller.as_bytes == claim.manufacturer.as_bytes,
+            "caller is neither the holder nor the manufacturer of this claim",
+        )
+        _require(self._effective_claim_status(claim) == CLAIM_DISPUTED, "claim is not in a state that accepts evidence")
+        _require(claim.evidence_frozen_at == 0, "evidence for this claim is already frozen")
+
+        constitution = self.constitutions[claim.constitution_id]
+        _require(isinstance(category, str) and category != "", "category must be a non-empty string")
+        _require(
+            category in json.loads(constitution.acceptable_evidence_categories_json),
+            "category is not one of this constitution's acceptable_evidence_categories",
+        )
+
+        _require(isinstance(original_url, str) and original_url != "", "original_url must not be empty")
+        _require(len(original_url) <= _MAX_URL_LEN, f"original_url exceeds the maximum length ({_MAX_URL_LEN})")
+
+        parsed = urllib.parse.urlsplit(original_url)
+        _require(parsed.scheme != "" and parsed.hostname, "original_url is malformed: missing scheme or host")
+
+        normalized = _normalize_url_for_dedupe(parsed.scheme, parsed.hostname, parsed.port, parsed.path, parsed.query)
+        existing_urls_json = self.evidence_urls_by_claim_json.get(claim_id, "[]")
+        existing_urls = json.loads(existing_urls_json)
+        _require(normalized not in existing_urls, "duplicate evidence URL for this claim")
+
+        policy_hosts = _parse_source_policy_hosts(constitution.source_eligibility_policy)
+        is_eligible = parsed.scheme == _ALLOWED_SCHEME and _host_allowed(parsed.hostname, policy_hosts)
+
+        evidence_id = self.next_evidence_id
+        self.next_evidence_id = u32(evidence_id + 1)
+        now = _now()
+
+        self.evidence[evidence_id] = EvidenceRecord(
+            evidence_id=evidence_id,
+            claim_id=claim_id,
+            submitter=caller,
+            original_url=original_url,
+            category=category,
+            host=parsed.hostname,
+            retrieval_method=_retrieval_method_for_category(category),
+            submitted_at=now,
+            eligibility=EVIDENCE_ELIGIBLE if is_eligible else EVIDENCE_INELIGIBLE,
+            retrieval_status=RETRIEVAL_PENDING,
+            retrieved_at=u64(0),
+            frozen_at=u64(0),
+            extracted_content="",
+            fingerprint=b"",
+            available=False,
+        )
+
+        existing_urls.append(normalized)
+        self.evidence_urls_by_claim_json[claim_id] = _canonical_json(existing_urls)
+        ids_json = self.evidence_ids_by_claim_json.get(claim_id, "[]")
+        ids = json.loads(ids_json)
+        ids.append(int(evidence_id))
+        self.evidence_ids_by_claim_json[claim_id] = _canonical_json(ids)
+
+        return evidence_id
+
+    def _evidence_fingerprint(self, record: EvidenceRecord, retrieval_status: str, content: str) -> bytes:
+        """Binds every field later adjudication (Stage 3) relies on. Documented input set,
+        item 14: evidence_id, claim_id, original_url (as submitted, not re-normalized - the
+        exact string the claim is anchored to), category, retrieval_status, and the bounded
+        content itself. Uses the Stage 1 canonicalization helpers directly - no separate,
+        weaker encoding is introduced for evidence."""
+        return _fingerprint(
+            {
+                "evidence_id": int(record.evidence_id),
+                "claim_id": int(record.claim_id),
+                "original_url": record.original_url,
+                "category": record.category,
+                "retrieval_status": retrieval_status,
+                "content": content,
+            }
+        )
+
+    @gl.public.write
+    def freeze_evidence(self, claim_id: u32) -> None:
+        """Retrieval + extraction + equivalence + commit, as ONE transaction covering every
+        ELIGIBLE, not-yet-processed evidence record for this claim - but still a transaction
+        entirely separate from, and prior to, any Stage 3 adjudication call. This is the
+        architectural boundary item 12 requires: Claim -> Evidence submission -> Retrieval ->
+        Frozen Evidence -> STOP."""
+        claim = self._require_claim(claim_id)
+        _require(self._effective_claim_status(claim) == CLAIM_DISPUTED, "claim is not in a state ready for evidence freeze")
+        _require(claim.evidence_frozen_at == 0, "evidence for this claim is already frozen")
+
+        ids = json.loads(self.evidence_ids_by_claim_json.get(claim_id, "[]"))
+        now = _now()
+
+        for raw_id in ids:
+            evidence_id = u32(raw_id)
+            record = self.evidence[evidence_id]
+            if record.eligibility != EVIDENCE_ELIGIBLE:
+                continue  # ineligible records are never retrieved - docs/EVIDENCE_ARCHITECTURE.md
+            if record.retrieval_status != RETRIEVAL_PENDING:
+                continue  # idempotency guard - a record is only ever processed once
+
+            url = record.original_url
+            method = record.retrieval_method
+
+            def leader_fn():
+                return _fetch_evidence_once(url, method)
+
+            def validator_fn(leader_result):
+                if not isinstance(leader_result, gl.vm.Return):
+                    return False
+                validator_data = _fetch_evidence_once(url, method)
+                leader_data = leader_result.calldata
+                if leader_data["status"] != validator_data["status"]:
+                    return False
+                if leader_data["status"] == RETRIEVAL_AVAILABLE:
+                    return leader_data["content"] == validator_data["content"]
+                return True  # both sides agree on a non-AVAILABLE status; content is moot
+
+            result = gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
+
+            record.retrieval_status = result["status"]
+            record.extracted_content = result["content"]
+            record.retrieved_at = now
+            record.frozen_at = now
+            record.available = result["status"] == RETRIEVAL_AVAILABLE
+            record.fingerprint = self._evidence_fingerprint(record, result["status"], result["content"])
+
+        claim.evidence_frozen_at = now
+        claim.status = CLAIM_EVIDENCE_FROZEN
+
+    @gl.public.view
+    def get_evidence(self, evidence_id: u32) -> dict:
+        record = self.evidence.get(evidence_id)
+        if record is None:
+            return {}
+        return {
+            "evidence_id": int(record.evidence_id),
+            "claim_id": int(record.claim_id),
+            "submitter": record.submitter.as_hex,
+            "original_url": record.original_url,
+            "category": record.category,
+            "host": record.host,
+            "retrieval_method": record.retrieval_method,
+            "submitted_at": int(record.submitted_at),
+            "eligibility": record.eligibility,
+            "retrieval_status": record.retrieval_status,
+            "retrieved_at": int(record.retrieved_at),
+            "frozen_at": int(record.frozen_at),
+            "extracted_content": record.extracted_content,
+            "fingerprint": record.fingerprint.hex(),
+            "available": record.available,
+        }
+
+    @gl.public.view
+    def list_evidence_ids_for_claim(self, claim_id: u32) -> list:
+        ids_json = self.evidence_ids_by_claim_json.get(claim_id)
+        return [] if ids_json is None else json.loads(ids_json)
 
 
 @gl.evm.contract_interface
