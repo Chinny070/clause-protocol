@@ -5,6 +5,21 @@ Storage-compatible shapes for a single Intelligent Contract, per the verified ty
 (`u32`/`u64`/`u256`) not `int`, `@allow_storage @dataclass` for nested structs, storage is
 zero-initialized so every enum needs an explicit "unset" member that is never a valid terminal value.
 
+> **Stage 1 implementation notes (see STAGE_1_VERIFICATION.md for full deviation records):**
+> (1) `genvm-lint`'s `validate` check only accepts specific integer widths as `TreeMap` keys
+> and rejected `u64` (accepting `u32`) when Stage 1 code was actually linted against the
+> installed SDK — every entity ID (`program_id`, `constitution_id`, `warranty_id`,
+> `reservation_id`) is therefore `u32`, not `u64` as sketched below. u32 (4.29 billion) is not
+> a practical constraint for Stage 1's scope. Genuine time/duration fields
+> (`registered_at`, `coverage_start/end`, `claim_deadline_s`, etc.) remain `u64`. (2) Nested
+> list/struct fields (`covered_clause_ids`, `excluded_clause_ids`,
+> `acceptable_evidence_categories`, `remedy_table`) are stored as validated canonical-JSON
+> strings on the `WarrantyConstitution` record rather than as literal `DynArray[str]`/
+> `DynArray[RemedyRow]` fields, matching this workspace's own previously-proven-safe pattern
+> ("flat `@allow_storage @dataclass` + JSON-string fields for nested data") rather than the
+> untested nested-collection shapes sketched below. Every JSON payload is deterministically
+> validated for shape at write time, so a stored value is never untrusted at read time.
+
 ## WarrantyProgram
 
 ```

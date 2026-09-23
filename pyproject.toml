@@ -1,0 +1,8 @@
+[project]
+name = "clause-protocol"
+version = "0.1.0"
+description = "CLAUSE -- precommitted warranty adjudication protocol (Stage 1: deterministic foundation)"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
