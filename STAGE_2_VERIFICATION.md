@@ -274,9 +274,10 @@ evidence that gap concerns.
 
 ## 18. Git status and commit hash
 
-Working tree has the changes listed in §2, not yet committed at the time this report was
-written; commit hash recorded in a follow-up update to this section once committed (see the
-assistant's final message this turn for the actual hash).
+Branch `master`, no remotes, working tree clean after commit `850980a` ("feat: implement
+CLAUSE Stage 2 - claims, evidence locker, real GenLayer web retrieval", 16 files changed, 2039
+insertions). Preceding history: `ba1dd44`/`5cc7053` (Stage 1 hardening pass), `f701299`/
+`2f088e7`/`b47daad` (Stage 1 / Stage 0).
 
 ## 19. Required statement
 
