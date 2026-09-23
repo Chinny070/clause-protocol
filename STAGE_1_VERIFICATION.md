@@ -271,14 +271,16 @@ lock against.
 
 ```
 $ git -C C:\Users\USERpc\clauseproduct log --oneline
+5cc7053 harden: Stage 1 constitution/canonical-JSON/timestamp audit
+86badaa docs: record final commit hash in Stage 1 verification report
 f701299 feat: implement CLAUSE Stage 1 deterministic foundation
 2f088e7 chore: pin LF line endings for contract source
 b47daad docs: Stage 0 architecture freeze for CLAUSE
 ```
 
-Branch: `master`. Remotes: none. Commit `f701299` includes this report itself, the contract,
-and all test files (13 files changed, 2363 insertions). Working tree is clean after this
-commit.
+Branch: `master`. Remotes: none. Commit `f701299` (13 files changed, 2363 insertions) is the
+original Stage 1 implementation; commit `5cc7053` (5 files changed, 1063 insertions, 22
+deletions) is the hardening pass covered by §15. Working tree is clean after this commit.
 
 ## 15. Stage 1 Hardening Pass (addendum, 2026-09-23)
 
