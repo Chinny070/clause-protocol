@@ -264,14 +264,14 @@ lock against.
 
 ```
 $ git -C C:\Users\USERpc\clauseproduct log --oneline
-<pending this report's own commit>
+f701299 feat: implement CLAUSE Stage 1 deterministic foundation
 2f088e7 chore: pin LF line endings for contract source
 b47daad docs: Stage 0 architecture freeze for CLAUSE
 ```
 
-Branch: `master`. Remotes: none. This report itself, along with the contract and test files,
-is committed in the same session as a follow-up commit after this report is written (commit
-hash to be recorded once made — see the assistant's next message for the final hash).
+Branch: `master`. Remotes: none. Commit `f701299` includes this report itself, the contract,
+and all test files (13 files changed, 2363 insertions). Working tree is clean after this
+commit.
 
 ## 14. Required statement
 
