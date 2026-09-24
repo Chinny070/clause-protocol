@@ -327,4 +327,12 @@ describe("amount inputs never crash the page while typing", () => {
     await userEvent.type(input, ".2");
     await waitFor(() => expect(screen.getByRole("button", { name: "Fund warranty capacity" })).toBeEnabled());
   });
+  it("typing only a coverage start date (end still empty) keeps the issue form rendered and disabled", async () => {
+    const s = setup({});
+    renderApp({ path: "/manufacturer/program/1/issue", transport: s.read, provider: makeProvider({ accounts: [MFR] }), writeTransport: s.write });
+    const start = await screen.findByLabelText("Coverage start (UTC date)");
+    await userEvent.type(start, "2026-09-24");
+    expect(screen.getByLabelText("Coverage end (UTC date)")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Issue warranty passport" })).toBeDisabled();
+  });
 });

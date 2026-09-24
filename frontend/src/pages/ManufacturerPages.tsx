@@ -300,6 +300,11 @@ function Issue({ reader, programId }: { reader: ClauseReader; programId: number 
   const atoms = parseGen(amount);
   const ts = (d: string) => (/^\d{4}-\d{2}-\d{2}$/.test(d) ? Math.floor(Date.parse(d + "T00:00:00Z") / 1000) : 0);
   const avail = q.data?.pool?.availableBalance ?? 0n;
+  // Built while the form is still half-filled, so it must never throw: an invalid draft falls back to a
+  // placeholder spec and the button stays disabled through `reason`.
+  const issueInput = { programId, constitutionId: Number(cid) || 1, holder: holder || "0x", productModelId: model || "x", productCommitmentHex: hex || "0".repeat(64), coverageStart: ts(start) || 1, coverageEnd: ts(end) || 2, maxDeterministicRemedy: atoms !== null && atoms > 0n ? atoms : 1n };
+  let issueSpec;
+  try { issueSpec = calls.issueWarranty(issueInput); } catch { issueSpec = calls.issueWarranty({ ...issueInput, coverageStart: 1, coverageEnd: 2 }); }
   const reason = !w.ready ? "Connect a wallet on StudioNet." : !cid ? "Choose the terms version." : !/^0x[0-9a-fA-F]{40}$/.test(holder) ? "Enter the holder's wallet address (0x…)." : model.trim() === "" ? "Enter the product model." : hex.length !== 64 ? "Generate the product commitment first." : !ts(start) || !ts(end) || ts(start) >= ts(end) ? "Enter a valid coverage start before end." : atoms === null || atoms <= 0n ? "Enter the maximum remedy in GEN." : atoms > avail ? `Insufficient capacity: only ${formatGen(avail)} GEN is unreserved (preview; the contract decides).` : null;
   return (
     <AsyncBoundary loading={q.loading} error={q.error} what="Reading program">
@@ -318,7 +323,7 @@ function Issue({ reader, programId }: { reader: ClauseReader; programId: number 
               {hex ? <p className="mono wrap small">{hex}</p> : null}</fieldset>
             <div className="grid two"><div className="field"><label htmlFor="cs">Coverage start (UTC date)</label><input id="cs" type="date" value={start} onChange={(e) => setStart(e.target.value)} /></div><div className="field"><label htmlFor="ce">Coverage end (UTC date)</label><input id="ce" type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></div></div>
             <div className="field"><label htmlFor="mr">Maximum remedy (GEN) — reserved from your capacity</label><input id="mr" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} /><p className="hint">Unreserved capacity now: {formatGen(avail)} GEN. This is a preview; the contract enforces the real limit.</p></div>
-            <TxButton spec={calls.issueWarranty({ programId, constitutionId: Number(cid) || 1, holder: holder || "0x", productModelId: model || "x", productCommitmentHex: hex || "0".repeat(64), coverageStart: ts(start) || 1, coverageEnd: ts(end) || 2, maxDeterministicRemedy: atoms !== null && atoms > 0n ? atoms : 1n })}
+            <TxButton spec={issueSpec}
               disabledReason={reason} reread={() => reader.listPassportIds(programId)} onDone={() => nav(`/manufacturer/program/${programId}`)}
               description={`Issues a warranty to ${holder || "the holder"} for ${model || "the product"} and reserves up to ${amount || "?"} GEN. The terms version freezes now if it is not frozen already.`} />
           </section>
