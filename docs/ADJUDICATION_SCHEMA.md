@@ -106,3 +106,69 @@ exists for a category the Constitution's `insufficient_evidence_behavior` requir
 `INSUFFICIENT_EVIDENCE`/`EVIDENCE_UNAVAILABLE` deterministically and `adjudicate` need not even run — a
 cost and prompt-injection-surface reduction, and a stronger guarantee than trusting the LLM to notice
 gaps itself.
+
+## Stage 3 as-implemented (2026-09-24)
+
+**The frozen 10-field schema above is unchanged and is exactly what is stored** (`Adjudication`
+record, `get_adjudication`). What Stage 3 pins down is *who produces each field*:
+
+| Stored field | Producer |
+|---|---|
+| `warranty_version_match` | **deterministic**: PASS iff passport, claim and constitution agree on `constitution_id` + fingerprint, else FAIL |
+| `coverage_window` | **deterministic**: PASS iff `coverage_start <= failure_asserted_at <= coverage_end` (claimant-asserted date vs frozen passport window), else FAIL. Never UNCLEAR (a failure date always exists) |
+| `evidence_sufficiency` = `UNAVAILABLE` | **deterministic**: eligible evidence exists but none is `AVAILABLE` |
+| `evidence_sufficiency` = `INSUFFICIENT` (no admissible evidence) | **deterministic**: no `ELIGIBLE` evidence at all |
+| `source_authority` | **deterministic**: PASS iff at least one evidence id is relied on (only `ELIGIBLE` evidence is ever shown, and relied ids are validated as a subset of those shown); else UNCLEAR. FAIL is reserved and currently unreachable because ineligible evidence never reaches adjudication |
+| `product_match`, `covered_clause_ids`, `exclusion_clause_ids`, `evidence_sufficiency` (SUFFICIENT/INSUFFICIENT), `evidence_ids_relied_on`, `rationale` | **model** (validated) |
+| `outcome` | **deterministic derivation** from the above; the model never emits it |
+
+**Model-level output schema** (strict; exactly these 6 keys, no others): `product_match`
+(PASS|FAIL|UNCLEAR), `covered_clause_ids` (subset of the claim's targeted COVERED clauses),
+`exclusion_clause_ids` (subset of the constitution's EXCLUDED clauses), `evidence_sufficiency`
+(SUFFICIENT|INSUFFICIENT; the model can never assert UNAVAILABLE), `evidence_ids_relied_on`
+(subset of evidence shown), `rationale` (non-empty, at most 1000 chars). This is a strict *subset*
+of the frozen schema, not a schema change; the omitted fields are derived by the contract.
+
+**Coherence policy (violations are malformed output and revert):** SUFFICIENT requires at least one
+relied evidence id; INSUFFICIENT forbids any covered/exclusion clause; a covered clause requires
+product PASS and SUFFICIENT; product FAIL forbids a covered clause.
+
+**Outcome derivation (first match wins):**
+1. `warranty_version_match = FAIL` -> `INVALID_CLAIM`
+2. `coverage_window = FAIL` -> `NOT_COVERED`
+3. `evidence_sufficiency = UNAVAILABLE` -> `EVIDENCE_UNAVAILABLE`
+4. `evidence_sufficiency = INSUFFICIENT` -> `INSUFFICIENT_EVIDENCE`
+5. `product_match = FAIL` -> `NOT_COVERED`; `= UNCLEAR` -> `INSUFFICIENT_EVIDENCE`
+6. any established exclusion -> `NOT_COVERED`
+7. covered clause established AND product/window/version/source all PASS AND SUFFICIENT -> `COVERED`
+8. otherwise (sufficient evidence, nothing covered established) -> `NOT_COVERED`
+
+Rules 1-3 and the no-evidence cases are decided **without consulting the model at all**
+(`decision_path` = `DETERMINISTIC_PREDICATE | DETERMINISTIC_NO_ADMISSIBLE_EVIDENCE |
+DETERMINISTIC_EVIDENCE_UNAVAILABLE`; otherwise `SEMANTIC`).
+
+**Burden/exclusion semantics:** an exclusion counts only if the model lists it as *established by
+evidence* (prompt rule 5); merely existing in the constitution changes nothing. Coverage requires an
+*affirmative* covered clause; absence of proof of an exclusion does not create coverage (rule 8). An
+established exclusion defeats an established covered clause (rule 6 before 7), and both lists are
+stored for Stage 4.
+
+**Validator equivalence** = equality of `_structural_key`: `product_match`, sorted
+`covered_clause_ids`, sorted `exclusion_clause_ids`, `evidence_sufficiency`, sorted
+`evidence_ids_relied_on`. `rationale` is stored from the accepted leader result and is **never**
+compared (two honest models will not phrase alike). `outcome` and the deterministic fields are pure
+functions of compared inputs plus frozen state, so they cannot differ between honest nodes. Each
+validator also re-runs the full fail-closed checker on the *leader's returned value* before comparing
+(a malicious leader cannot smuggle an unchecked structure through consensus). A validator whose own
+model call fails or is malformed votes `False`; it never raises.
+
+**Exact prompt inputs** (`_build_adjudication_prompt`; asserted by tests). *governing_rules*:
+`constitution_version`, `product_scope`, `coverage_calc`, `targeted_covered_clauses[{clause_id,text}]`,
+`exclusion_clauses[{clause_id,text}]`. *claim_facts*: `claim_id`, `registered_product_model`,
+`failure_date_asserted_by_claimant_unverified`, `coverage_start`, `coverage_end`,
+`protocol_determined{warranty_version_match, coverage_window}`. *evidence* (at most 10; `ELIGIBLE` +
+`AVAILABLE` + frozen only): `evidence_id`, `category`, `submitted_by` (HOLDER|MANUFACTURER),
+`source_host`, `retrieved_at`, `content`. **Never in the prompt** (test-enforced): pool balances,
+reserved/available capacity, remedy table/values, `max_deterministic_remedy`, reservation data,
+addresses, `product_commitment`, fingerprints, the manufacturer response, the
+`*_evidence_behavior` policy fields, and any ineligible/failed evidence.

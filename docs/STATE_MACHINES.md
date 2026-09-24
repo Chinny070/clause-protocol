@@ -164,3 +164,20 @@ record's already-committed fields outside these two documented transitions each 
 `tests/direct/test_constitution_hardening.py` (extended in the Stage 2 pass to cover
 `file_claim`/`respond_to_claim`/`submit_evidence`/`freeze_evidence` against the frozen
 Constitution, and by direct assertion for `EvidenceRecord` post-freeze immutability).
+
+## Stage 3 as-implemented: adjudication transition
+
+```
+EVIDENCE_FROZEN --adjudicate_claim (permissionless, once)--> DECIDED
+```
+
+`adjudicate_claim(claim_id)` preconditions: claim `EVIDENCE_FROZEN` and no existing adjudication.
+State change (all writes strictly **after** any consensus block returns): new immutable
+`Adjudication`; `adjudication_id_by_claim[claim_id]`; claim `status = DECIDED`. Timestamps:
+`adjudicated_at = _now()`; `challenge_window_closes_at = adjudicated_at + challenge_window_s`
+(stored as data only; no challenge mechanism exists until Stage 4). Financial effect: **none** - pool,
+reservation and passport are untouched (test-enforced). Failure (malformed output, provider failure,
+validator disagreement/consensus failure): the transaction reverts; no `Adjudication`, the claim stays
+`EVIDENCE_FROZEN` and remains adjudicable. `DECIDED` is *not* terminal (Stage 4:
+`CHALLENGE_WINDOW -> FINAL -> SETTLED`); like `ACCEPTED`/`EVIDENCE_FROZEN` it does not block filing a
+new claim on the same warranty (preserves Stage 2 behaviour).

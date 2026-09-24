@@ -151,3 +151,62 @@ def submit_evidence(contract, direct_vm, claim_id, submitter, url, category="REC
 def freeze_evidence(contract, direct_vm, claim_id, caller):
     direct_vm.sender = caller
     contract.freeze_evidence(claim_id=claim_id)
+
+
+# --- Stage 3: adjudication fixtures ----------------------------------------------------------
+import json as _json_s3
+
+S3_COVERED = [
+    {"clause_id": "C-001", "text": "Manufacturing defects in materials or workmanship are covered."},
+    {"clause_id": "C-002", "text": "Battery capacity loss below 60 percent within the term is covered."},
+]
+S3_EXCLUDED = [{"clause_id": "X-001", "text": "Accidental impact or water damage is excluded."}]
+S3_URL = "https://docs.genlayer.com/"
+
+
+def build_frozen_claim(direct_deploy, direct_vm, direct_accounts, evidence=None, failure_offset_s=0,
+                       targeted=("C-001",), challenge_window_s=7 * ONE_DAY):
+    """Full deterministic setup up to a claim in EVIDENCE_FROZEN, via normal contract calls.
+    `evidence` = list of (path, http_status, body); http_status None => no mock (unreachable),
+    path starting with 'http' is used as a full URL (e.g. an ineligible host)."""
+    manufacturer, holder = direct_accounts[0], direct_accounts[1]
+    direct_vm.sender = manufacturer
+    contract = direct_deploy(CONTRACT_PATH)
+    program_id = contract.create_program("Acme")
+    constitution_id = create_constitution_stage2(
+        contract, program_id, covered_clauses=S3_COVERED, excluded_clauses=S3_EXCLUDED,
+        source_policy="docs.genlayer.com", evidence_categories=["RECEIPT"], challenge_window_s=challenge_window_s,
+    )
+    fund(contract, direct_vm, program_id, manufacturer, 10 * ONE_GEN)
+    warranty_id = issue(contract, direct_vm, program_id, constitution_id, manufacturer, holder, max_remedy=5 * ONE_GEN)
+    now = int(contract.now())
+    claim_id = file_claim(contract, direct_vm, warranty_id, holder, targeted_clause_ids=list(targeted),
+                          failure_asserted_at=now + failure_offset_s)
+    respond(contract, direct_vm, claim_id, manufacturer, "DISPUTE")
+    evidence_ids = []
+    for i, (path, status, body) in enumerate(evidence if evidence is not None else [("e1", 200, "Unit failed.")]):
+        url = path if path.startswith("http") else S3_URL + path
+        if status is not None:
+            direct_vm.mock_web(url.replace(".", r"\.").replace("?", r"\?"), {"status": status, "body": body})
+        evidence_ids.append(submit_evidence(contract, direct_vm, claim_id, holder, url, "RECEIPT"))
+    freeze_evidence(contract, direct_vm, claim_id, holder)
+    return {"contract": contract, "manufacturer": manufacturer, "holder": holder, "program_id": program_id,
+            "constitution_id": constitution_id, "warranty_id": warranty_id, "claim_id": claim_id,
+            "evidence_ids": evidence_ids, "now": now}
+
+
+def model_result(product_match="PASS", covered=("C-001",), exclusions=(), sufficiency="SUFFICIENT",
+                 relied=(1,), rationale="Evidence supports the finding."):
+    return {"product_match": product_match, "covered_clause_ids": list(covered),
+            "exclusion_clause_ids": list(exclusions), "evidence_sufficiency": sufficiency,
+            "evidence_ids_relied_on": list(relied), "rationale": rationale}
+
+
+def mock_model(direct_vm, result, pattern=r"GOVERNING RULES"):
+    """Registers a canned model reply (JSON text or dict). direct-mode auto-parses JSON strings."""
+    direct_vm.mock_llm(pattern, result if isinstance(result, str) else _json_s3.dumps(result))
+
+
+def adjudicate(contract, direct_vm, claim_id, caller):
+    direct_vm.sender = caller
+    return contract.adjudicate_claim(claim_id=claim_id)

@@ -296,3 +296,11 @@ class Clause_(gl.Contract):
 
 (`Clause_` used here only to avoid colliding with the `Clause` struct name; the actual contract class name
 is a Stage 1 decision, not frozen here.)
+
+> **Stage 3 implementation notes:** `Adjudication` is stored with `u32` ids and the Stage 1
+> JSON-string pattern for lists (`covered_clause_ids_json`, `exclusion_clause_ids_json`,
+> `evidence_ids_relied_on_json`; canonical, sorted). Added beyond the Stage 0 sketch, all audit/Stage 4
+> data: `evidence_ids_considered_json` (what the adjudicator was shown), `decision_path`,
+> `challenge_window_closes_at`. The claim-to-adjudication link is a separate `adjudication_id_by_claim`
+> map, so the **Stage 2 `Claim` struct layout is unchanged**; `get_claim` now also returns
+> `adjudication_id` (0 = none). Claim status gains `DECIDED`.

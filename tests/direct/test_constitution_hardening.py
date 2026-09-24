@@ -15,7 +15,7 @@ import pytest
 
 from helpers import (
     CONTRACT_PATH, ONE_GEN, create_constitution, create_constitution_stage2, file_claim,
-    freeze_evidence, fund, issue, respond, submit_evidence,
+    freeze_evidence, fund, issue, respond, submit_evidence, adjudicate,
 )
 
 
@@ -56,6 +56,8 @@ EXPECTED_WRITE_METHODS = {
     "respond_to_claim",
     "submit_evidence",
     "freeze_evidence",
+    # Stage 3 addition - reads the frozen constitution, must never write it.
+    "adjudicate_claim",
 }
 
 
@@ -158,6 +160,8 @@ def test_every_non_constitution_write_method_leaves_frozen_constitution_untouche
     assert_unchanged("submit_evidence")
     freeze_evidence(contract, direct_vm, claim_id, other_holder)
     assert_unchanged("freeze_evidence")
+    adjudicate(contract, direct_vm, claim_id, other_holder)  # deterministic path (source ineligible); reads constitution only
+    assert_unchanged("adjudicate_claim")
 
     # retire_program is terminal - exercised last.
     direct_vm.sender = manufacturer

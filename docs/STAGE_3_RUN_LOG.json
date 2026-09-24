@@ -1,0 +1,381 @@
+{
+  "steps": [
+    {
+      "fn": "create_program",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000002",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "create_constitution",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000003",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "fund_pool",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000004",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "issue_warranty",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000005",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "file_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000006",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "respond_to_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000007",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "submit_evidence",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000008",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "freeze_evidence",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000009",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "adjudicate_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000a",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_stderr": "UserError(message='[LLM_ERROR] model output is not a JSON object')"
+    },
+    {
+      "fn": "file_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000b",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "respond_to_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000c",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "submit_evidence",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000d",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "freeze_evidence",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000e",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "adjudicate_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000f",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "file_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000010",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "respond_to_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000011",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "submit_evidence",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000012",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "freeze_evidence",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000013",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "adjudicate_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000014",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "adjudicate_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000015",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_stderr": "UserError(message='claim is not in the frozen-evidence state')"
+    }
+  ],
+  "semantic_without_model": {
+    "leader": {
+      "execution_result": "ERROR",
+      "result": {
+        "raw": "AVVzZXJFcnJvcihtZXNzYWdlPSdbTExNX0VSUk9SXSBtb2RlbCBvdXRwdXQgaXMgbm90IGEgSlNPTiBvYmplY3QnKQ==",
+        "status": "rollback",
+        "payload": "UserError(message='[LLM_ERROR] model output is not a JSON object')"
+      },
+      "stderr": "UserError(message='[LLM_ERROR] model output is not a JSON object')"
+    },
+    "claim": {
+      "adjudication_id": 0,
+      "claim_id": 1,
+      "constitution_fingerprint": "1b4b967ca75af39129129628d38d3366beb79d9172f61350207f7b303f1727cc",
+      "constitution_id": 1,
+      "evidence_frozen_at": 1790228683,
+      "failure_asserted_at": 1790228683,
+      "filed_at": 1790228683,
+      "holder": "0xDE4e8E0a4B4904F1559e1c9891fc94a66485E295",
+      "manufacturer": "0x84459812C40783b9aC06229fd98Eb84C0e075fE9",
+      "manufacturer_response": "DISPUTE",
+      "program_id": 1,
+      "responded_at": 1790228683,
+      "response_deadline": 1791438283,
+      "status": "EVIDENCE_FROZEN",
+      "targeted_clause_ids": [
+        "C-001"
+      ],
+      "warranty_id": 1
+    },
+    "adjudication_1": {}
+  },
+  "unavailable_path": {
+    "adjudication": {
+      "adjudicated_at": 1790228683,
+      "adjudication_id": 1,
+      "challenge_window_closes_at": 1790833483,
+      "claim_id": 2,
+      "constitution_id": 1,
+      "coverage_window": "PASS",
+      "covered_clause_ids": [],
+      "decision_path": "DETERMINISTIC_EVIDENCE_UNAVAILABLE",
+      "evidence_ids_considered": [],
+      "evidence_ids_relied_on": [],
+      "evidence_sufficiency": "UNAVAILABLE",
+      "exclusion_clause_ids": [],
+      "outcome": "EVIDENCE_UNAVAILABLE",
+      "product_match": "UNCLEAR",
+      "rationale": "Decided deterministically from frozen evidence availability; no model was consulted.",
+      "source_authority": "UNCLEAR",
+      "superseded": false,
+      "warranty_version_match": "PASS"
+    },
+    "claim": {
+      "adjudication_id": 1,
+      "claim_id": 2,
+      "constitution_fingerprint": "1b4b967ca75af39129129628d38d3366beb79d9172f61350207f7b303f1727cc",
+      "constitution_id": 1,
+      "evidence_frozen_at": 1790228683,
+      "failure_asserted_at": 1790228683,
+      "filed_at": 1790228683,
+      "holder": "0xDE4e8E0a4B4904F1559e1c9891fc94a66485E295",
+      "manufacturer": "0x84459812C40783b9aC06229fd98Eb84C0e075fE9",
+      "manufacturer_response": "DISPUTE",
+      "program_id": 1,
+      "responded_at": 1790228683,
+      "response_deadline": 1791438283,
+      "status": "DECIDED",
+      "targeted_clause_ids": [
+        "C-001"
+      ],
+      "warranty_id": 1
+    }
+  },
+  "outside_window_path": {
+    "adjudicated_at": 1790228683,
+    "adjudication_id": 2,
+    "challenge_window_closes_at": 1790833483,
+    "claim_id": 3,
+    "constitution_id": 1,
+    "coverage_window": "FAIL",
+    "covered_clause_ids": [],
+    "decision_path": "DETERMINISTIC_PREDICATE",
+    "evidence_ids_considered": [
+      3
+    ],
+    "evidence_ids_relied_on": [],
+    "evidence_sufficiency": "INSUFFICIENT",
+    "exclusion_clause_ids": [],
+    "outcome": "NOT_COVERED",
+    "product_match": "UNCLEAR",
+    "rationale": "Decided deterministically from frozen protocol facts; no model was consulted.",
+    "source_authority": "UNCLEAR",
+    "superseded": false,
+    "warranty_version_match": "PASS"
+  },
+  "pool_unchanged": true
+}

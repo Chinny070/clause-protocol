@@ -146,3 +146,17 @@ per Stage 2's explicit no-frontend/no-production-deployment scope. A local GenLa
 simulator (`glsim`) was confirmed to boot and serve a working JSON-RPC endpoint during this
 stage, but a full scripted deploy-and-exercise run against it was not completed this session —
 see `STAGE_2_VERIFICATION.md` for the exact state of that unresolved item.
+
+## Stage 3 status: semantic adjudication tests implemented; live model NOT exercised
+
+New direct-mode files (model **mocked**; contract-side behaviour only): `test_stage3_adjudication.py`
+(29: the 8 semantic fixtures, derivation table, state/no-money, prompt-content and counterfactual
+independence), `test_stage3_malformed_output.py` (37: 33 malformed shapes each asserted to fail with the
+checker's own `[LLM_ERROR]`, provider failure, rationale bound, sort-only normalization),
+`test_stage3_prompt_injection.py` (11), `test_stage3_validator_replay.py` (21: agree / rationale-only
+difference / every structural change / tampered leader / leader error / validator-model failure /
+two-claim closure isolation; **mutation-tested**: a deliberately injected shared-state bug makes the
+isolation test fail). Real simulator: `tests/integration/test_real_adjudication.py` (separate
+invocation via `scripts/run_real_web.sh`): deterministic paths for real; the semantic path fails closed
+with no model. **Not executed anywhere: any real model call, real leader/validator semantic consensus,
+real disagreement rollback.**

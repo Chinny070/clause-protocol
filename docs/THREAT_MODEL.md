@@ -138,3 +138,26 @@ addresses it (cross-referenced, not restated in full — see the linked doc for 
   earlier verifications (`NETWORK_AND_SDK_VERIFICATION.md`). Using the wrong attribute name would fail
   loudly (AttributeError) rather than silently misbehave, so this is a build-breaking risk, not a
   security risk, but is listed here because it was discovered during this Stage 0 threat-modeling pass.
+
+## Stage 3 additions (adjudication)
+
+- **Model-output attacks** (prompt-injected result, extra `outcome`/`payout` keys, hallucinated
+  clause/evidence ids, contradictory findings, oversized or mistyped fields): fail closed via
+  `_check_model_result`; nothing is repaired; re-applied by every validator to the leader's value.
+- **Injection via evidence**: confined to a JSON-string data slot (cannot forge section headers or break
+  out of the array); instructions precede it and forbid obeying/browsing; adjudication makes **no** web
+  call; deterministic facts (window, version, eligibility, availability) are computed outside the model
+  and cannot be promoted by evidence text. *Residual, unprovable locally:* a real model might still be
+  swayed within its allowed output space; the defenses are independent validators + coherence rules +
+  deterministic derivation, and a real-model injection test is a StudioNet gate.
+- **Counterfactual leakage**: money, addresses, commitments, fingerprints and policy-consequence fields
+  are excluded from the prompt (test-enforced).
+- **Closure/replay bugs**: the leader/validator pair lives in one module-level function; replay tests
+  plus a mutation check.
+- **Provider failure masquerading as success**: glsim returns provider errors as a *string*; the
+  non-dict rejection handles it (observed on the real simulator).
+- **Evidence cap**: at most 10 available records are shown to the model (ids ascending); later frozen
+  records are not considered. A claim with more than 10 usable records is adjudicated on the first 10 -
+  a documented risk, recorded per adjudication in `evidence_ids_considered`.
+- **Residual gaps** (unchanged protocol gates): undetermined-consensus rollback, real render, real model
+  behaviour.
