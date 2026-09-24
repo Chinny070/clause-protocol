@@ -61,7 +61,8 @@ def _run():
         ["RECEIPT"], "example.org", 30 * 86400, 14 * 86400, 7 * 86400, 1,
         "RULE_FOR_MANUFACTURER", "RULE_FOR_MANUFACTURER", "Cancel before any claim.",
         [{"outcome": "COVERED", "clause_id": "C-001", "remedy_kind": "FULL_REFUND", "remedy_value": 0},
-         {"outcome": "NOT_COVERED", "clause_id": "", "remedy_kind": "NONE", "remedy_value": 0}],
+         {"outcome": "NOT_COVERED", "clause_id": "", "remedy_kind": "NONE", "remedy_value": 0},
+         {"outcome": "ACCEPTED_NO_CONTEST", "clause_id": "", "remedy_kind": "FULL_REFUND", "remedy_value": 0}],
     ], mfr)
     w(addr, "fund_pool", [1], mfr, value=3 * 10**15)
     now = int(read(addr, "now"))

@@ -210,3 +210,12 @@ Claim states added (stored `Claim.status`; the Stage 2 `Claim` struct is unchang
 
 Failed/undetermined semantic steps (`resolve_challenge`, `execute_remand`) write nothing before the consensus block
 returns, so they leave the claim and challenge exactly as they were (retryable until the lapse deadline).
+
+
+---
+
+## Stage 4.5: release/cancel preconditions (final)
+
+`release_expired_reservation(warranty)`: passport EXPIRED (past `coverage_end`) and `now > coverage_end + claim_deadline_s`, or passport CANCELLED; and every claim on the warranty `SETTLED`; reservation `ACTIVE`.
+`cancel_warranty(warranty)`: passport ACTIVE (not yet expired) and every claim on the warranty `SETTLED`; afterwards no new claim can be filed (CANCELLED), so the reservation may be released.
+Blocked by any claim in RESPONSE_WINDOW, ACCEPTED, DISPUTED, EVIDENCE_FROZEN, DECIDED, CHALLENGED, CHALLENGE_RESOLVED or FINAL.

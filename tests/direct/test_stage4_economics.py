@@ -414,24 +414,12 @@ def test_state_written_before_transfer_no_double_spend_on_repeat(direct_deploy, 
     assert env["contract"].get_final_decision(env["claim_id"])["claimable"] == 0
 
 
-def test_claim_that_fails_finalization_is_not_settleable(direct_deploy, direct_vm, direct_accounts):
-    """A COVERED outcome whose frozen table lacks any matching row fails closed: no payout, no state change."""
+def test_incomplete_remedy_table_can_no_longer_reach_a_payable_deadlock(direct_deploy, direct_vm, direct_accounts):
+    """Stage 4.5: the deadlock this test used to exercise (COVERED with no matching row) is now impossible -
+    the constitution is rejected at creation, before any warranty can bind to it."""
     table = [{"outcome": "NOT_COVERED", "clause_id": "", "remedy_kind": "NONE", "remedy_value": 0}]
-    env, ledger = make_world(direct_deploy, direct_vm, direct_accounts, funding=10 * ONE_GEN, remedy_table=table)
-    from helpers import freeze_evidence, respond, submit_evidence, S3_URL
-    c = env["contract"]
-    respond(c, direct_vm, env["claim_id"], env["manufacturer"], "DISPUTE")
-    direct_vm.mock_web(r"https://docs\.genlayer\.com/f1", {"status": 200, "body": "Unit failed."})
-    eid = submit_evidence(c, direct_vm, env["claim_id"], env["holder"], S3_URL + "f1")
-    freeze_evidence(c, direct_vm, env["claim_id"], env["holder"])
-    decide(env, direct_vm, model_result(relied=(eid,)))
-    past_challenge_window(env, direct_vm)
-    with pytest.raises(Exception, match="failing closed"):
-        finalize(env, direct_vm)
-    assert c.get_claim(env["claim_id"])["status"] == "DECIDED" and c.get_final_decision(env["claim_id"]) == {}
-    with pytest.raises(Exception):
-        settle(env, direct_vm)
-    ledger.check("nothing moved")
+    with pytest.raises(Exception, match="remedy_table incomplete"):
+        make_world(direct_deploy, direct_vm, direct_accounts, funding=10 * ONE_GEN, remedy_table=table)
 
 
 # ---- seeded randomized adversarial driver -------------------------------------------------------------------

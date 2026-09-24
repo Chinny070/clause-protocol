@@ -574,6 +574,30 @@ def _validate_remedy_table(rows: list, known_clause_ids: set) -> list:
     return validated
 
 
+def _check_remedy_completeness(rows: list, covered_ids: list) -> None:
+    """Remedy-table completeness (docs/ECONOMIC_INVARIANTS.md, Stage 4.5). Enforced when the constitution
+    is created, i.e. before any passport can bind to it, because a frozen constitution cannot be amended.
+    Every reachable payable final state must resolve to a row:
+      * ACCEPTED_NO_CONTEST is always reachable (a manufacturer may ACCEPT any claim): requires the
+        outcome-level row (ACCEPTED_NO_CONTEST, "").
+      * COVERED, and evidence-gap outcomes under RULE_FOR_HOLDER (which price the claim's targeted covered
+        clauses), can establish or target ANY non-empty subset of the covered clauses, each priced by its
+        clause-specific row else the outcome-level row (COVERED, ""). So every covered clause must resolve:
+        either (COVERED, "") exists, or (COVERED, clause_id) exists for EVERY covered clause.
+    Rows for non-payable outcomes are never required (they pay zero by rule)."""
+    pairs = set((r["outcome"], r["clause_id"]) for r in rows)
+    _require(
+        ("ACCEPTED_NO_CONTEST", "") in pairs,
+        "remedy_table incomplete: an outcome-level ACCEPTED_NO_CONTEST row (clause_id == '') is required",
+    )
+    if ("COVERED", "") not in pairs:
+        for clause_id in covered_ids:
+            _require(
+                ("COVERED", clause_id) in pairs,
+                "remedy_table incomplete: covered clause " + clause_id + " has no COVERED row and there is no outcome-level COVERED row",
+            )
+
+
 @allow_storage
 @dataclass
 class WarrantyProgram:
@@ -1289,6 +1313,7 @@ class ClauseProtocol(gl.Contract):
         canonical_categories = sorted(seen_categories)
 
         remedy_rows = _validate_remedy_table(remedy_table, all_ids)
+        _check_remedy_completeness(remedy_rows, covered_ids)
 
         # No two constitutions under one program may share a (program_id, version) pair
         # (docs/WARRANTY_CONSTITUTION.md, "Versioning is explicit, not inferred").

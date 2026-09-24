@@ -205,3 +205,12 @@ window `<=` boundary, or the recipient check each makes the corresponding tests 
 
 **Not executed anywhere:** any real model call for challenge review or remand, real leader/validator disagreement
 rollback, genuine transfer emission/finality timing, real render, genuine payable behaviour without the shim.
+
+
+---
+
+## Stage 4.5 status
+
+`test_stage45_freeze.py` (remedy completeness: exhaustive table shapes + end-to-end; grace-window release/cancel invariants across every claim state; `corrections` adversarial audit) and
+`test_stage45_interface_sync.py` (ABI document drift guard). Mutation checks: removing the completeness call or the grace condition makes the corresponding tests fail. Existing fixtures gained an
+outcome-level `COVERED` row and an `ACCEPTED_NO_CONTEST` row where they lacked one (completeness), without removing or weakening any assertion.

@@ -335,3 +335,11 @@ claim (targeted clauses, filed/response/freeze timestamps), evidence (ELIGIBLE r
 fingerprint/frozen_at - never content; ineligible records counted only), original adjudication, challenge, corrected
 adjudication, final decision (outcome, remedy, timestamps, settlement, withdrawal). Other views: `get_challenge`,
 `get_challenge_for_claim`, `get_final_decision`.
+
+
+---
+
+## Stage 4.5: data-model notes
+
+`Constitution.remedy_table_json` is guaranteed complete (see `ECONOMIC_INVARIANTS.md`) for every stored constitution. `Reservation.amount` = amount still reserved (passport keeps the original max).
+Release/cancel consult `claim_ids_by_warranty_json` and each `Claim.status == "SETTLED"`; no new storage was added in Stage 4.5.

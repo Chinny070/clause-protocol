@@ -11,6 +11,8 @@ SOURCE_POLICY = "manufacturer.example.com/warranty-terms only"
 
 DEFAULT_REMEDY_TABLE = [
     {"outcome": "COVERED", "clause_id": "C-001", "remedy_kind": "FULL_REFUND", "remedy_value": 0},
+    # Stage 4.5 completeness: fixtures with more covered clauses than rows resolve via the outcome-level row.
+    {"outcome": "COVERED", "clause_id": "", "remedy_kind": "FULL_REFUND", "remedy_value": 0},
     {"outcome": "NOT_COVERED", "clause_id": "", "remedy_kind": "NONE", "remedy_value": 0},
     {"outcome": "ACCEPTED_NO_CONTEST", "clause_id": "", "remedy_kind": "FULL_REFUND", "remedy_value": 0},
 ]

@@ -10,18 +10,19 @@
   },
   "before": {
     "claim": {
+      "adjudication_id": 0,
       "claim_id": 1,
-      "constitution_fingerprint": "eccaed864f231ac9dcf8f008c90782f71fe1635c9f272691da5344043ce5c076",
+      "constitution_fingerprint": "4758e13d2faf9c57cdf88ec090a89bdd72529cb7b2bf7d7845c4d9acc33d54eb",
       "constitution_id": 1,
       "evidence_frozen_at": 0,
-      "failure_asserted_at": 1790227154,
-      "filed_at": 1790227154,
-      "holder": "0x86b97Fb90f72213f9d4874E2A72c72ad73B7cA97",
-      "manufacturer": "0xF1EE71aAe917404135C9fD27392bD6CEc348Eaf6",
+      "failure_asserted_at": 1790237634,
+      "filed_at": 1790237634,
+      "holder": "0xA10261dd667D7f9CC64806Fa4f737B0DEF194A8C",
+      "manufacturer": "0x9a0FaaC3c1B107260Eb3423604f3234dAeca42D2",
       "manufacturer_response": "DISPUTE",
       "program_id": 1,
-      "responded_at": 1790227154,
-      "response_deadline": 1791436754,
+      "responded_at": 1790237634,
+      "response_deadline": 1791447234,
       "status": "DISPUTED",
       "targeted_clause_ids": [
         "C-001"
@@ -42,24 +43,25 @@
       "retrieval_method": "GET",
       "retrieval_status": "",
       "retrieved_at": 0,
-      "submitted_at": 1790227154,
-      "submitter": "0x86b97Fb90f72213f9d4874E2A72c72ad73B7cA97"
+      "submitted_at": 1790237634,
+      "submitter": "0xA10261dd667D7f9CC64806Fa4f737B0DEF194A8C"
     }
   },
   "after": {
     "claim": {
+      "adjudication_id": 0,
       "claim_id": 1,
-      "constitution_fingerprint": "eccaed864f231ac9dcf8f008c90782f71fe1635c9f272691da5344043ce5c076",
+      "constitution_fingerprint": "4758e13d2faf9c57cdf88ec090a89bdd72529cb7b2bf7d7845c4d9acc33d54eb",
       "constitution_id": 1,
-      "evidence_frozen_at": 1790227154,
-      "failure_asserted_at": 1790227154,
-      "filed_at": 1790227154,
-      "holder": "0x86b97Fb90f72213f9d4874E2A72c72ad73B7cA97",
-      "manufacturer": "0xF1EE71aAe917404135C9fD27392bD6CEc348Eaf6",
+      "evidence_frozen_at": 1790237634,
+      "failure_asserted_at": 1790237634,
+      "filed_at": 1790237634,
+      "holder": "0xA10261dd667D7f9CC64806Fa4f737B0DEF194A8C",
+      "manufacturer": "0x9a0FaaC3c1B107260Eb3423604f3234dAeca42D2",
       "manufacturer_response": "DISPUTE",
       "program_id": 1,
-      "responded_at": 1790227154,
-      "response_deadline": 1791436754,
+      "responded_at": 1790237634,
+      "response_deadline": 1791447234,
       "status": "EVIDENCE_FROZEN",
       "targeted_clause_ids": [
         "C-001"
@@ -72,16 +74,16 @@
       "claim_id": 1,
       "eligibility": "ELIGIBLE",
       "evidence_id": 1,
-      "extracted_content": "{\n  \"uuid\": \"27e2faea-495e-4f09-8943-d56a22ad38ae\"\n}",
-      "fingerprint": "802bcb828faaa2a1492d9b434296e6799ee610da77477f152b1db07ce1b6434c",
-      "frozen_at": 1790227154,
+      "extracted_content": "{\n  \"uuid\": \"ac5910f4-4e1e-4041-bbae-bbcac1f2c028\"\n}",
+      "fingerprint": "cf45299e1f4c883de68197e019eb0bf0ba03c124ba27bc15a8fa06e77413dabd",
+      "frozen_at": 1790237634,
       "host": "httpbin.org",
       "original_url": "https://httpbin.org/uuid",
       "retrieval_method": "GET",
       "retrieval_status": "AVAILABLE",
-      "retrieved_at": 1790227154,
-      "submitted_at": 1790227154,
-      "submitter": "0x86b97Fb90f72213f9d4874E2A72c72ad73B7cA97"
+      "retrieved_at": 1790237634,
+      "submitted_at": 1790237634,
+      "submitter": "0xA10261dd667D7f9CC64806Fa4f737B0DEF194A8C"
     }
   }
 }

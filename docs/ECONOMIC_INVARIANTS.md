@@ -173,3 +173,17 @@ re-entrant call finds nothing to take), `file_challenge` (one per claim), `execu
 recipient calls `withdraw_settlement`. No semantic code path transfers value; the model never sees or chooses an amount,
 percentage, recipient, or pool figure. A failed transfer after the guard is set is a stuck-fund incident to be handled
 manually, not an invitation to unset the guard (unchanged Stage 0 policy).
+
+
+---
+
+## Stage 4.5: remedy-table completeness and the reservation-release invariant (contract freeze)
+
+**Remedy-table completeness** (enforced in `create_constitution`, before any passport can bind): the table must contain an outcome-level
+`(ACCEPTED_NO_CONTEST, "")` row, and either an outcome-level `(COVERED, "")` row or a `(COVERED, c)` row for every covered clause `c`.
+This makes every reachable payable final state (ACCEPTED_NO_CONTEST; COVERED and its REVERSED/REMAND corrections; RULE_FOR_HOLDER evidence-gap outcomes;
+every non-empty covered-clause subset) resolve to a frozen row, so `finalize_claim` can never fail closed for an issued warranty. Non-payable outcomes need no row.
+See `STAGE_4_5_CONTRACT_FREEZE.md`.
+
+**Reservation-release invariant:** capacity is never released (by `release_expired_reservation` or `cancel_warranty`) while a valid claim can still be filed or any claim
+on the warranty is not `SETTLED`. Expired warranties additionally wait for `now > coverage_end + claim_deadline_s`. This is a permanent invariant, not a Stage 4 patch.

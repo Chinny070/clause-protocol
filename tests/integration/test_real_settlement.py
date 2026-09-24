@@ -71,6 +71,14 @@ def _run():
          {"outcome": "NOT_COVERED", "clause_id": "", "remedy_kind": "NONE", "remedy_value": 0},
          {"outcome": "ACCEPTED_NO_CONTEST", "clause_id": "", "remedy_kind": "FULL_REFUND", "remedy_value": 0}],
     ], mfr)
+    # Stage 4.5: an incomplete remedy table (no ACCEPTED_NO_CONTEST row) is refused before any warranty can bind to it
+    w(addr, "create_constitution", [
+        1, "2026.bad", "Widget Model X", "flat 1-year term",
+        [{"clause_id": "C-001", "text": "Manufacturing defects are covered."}], [],
+        ["RECEIPT"], "example.org", 30 * 86400, 14 * 86400, 60, 1, "RULE_FOR_MANUFACTURER", "RULE_FOR_MANUFACTURER", "x",
+        [{"outcome": "COVERED", "clause_id": "C-001", "remedy_kind": "FULL_REFUND", "remedy_value": 0}],
+    ], mfr, expect="ERROR")
+    assert read(addr, "get_constitution", [2]) == {}
     w(addr, "fund_pool", [1], mfr, value=FUND)
     now = int(read(addr, "now"))
     w(addr, "issue_warranty", [1, 1, holder.address, "WIDGET-X-001", format(1, "064x"), now, now + ONE_YEAR, MAXR], mfr)

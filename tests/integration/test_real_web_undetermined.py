@@ -41,7 +41,8 @@ def test_volatile_source_gives_undetermined_and_no_frozen_state():
         ("create_constitution", [1, "2026.1", "Widget", "flat", [{"clause_id": "C-001", "text": "Defects."}], [],
                                  ["RECEIPT"], "example.org,httpbin.org", 86400 * 30, 86400 * 14, 86400 * 7, 1,
                                  "RULE_FOR_MANUFACTURER", "RULE_FOR_MANUFACTURER", "Cancel before claim.",
-                                 [{"outcome": "COVERED", "clause_id": "C-001", "remedy_kind": "FULL_REFUND", "remedy_value": 0}]], mfr, 0),
+                                 [{"outcome": "COVERED", "clause_id": "C-001", "remedy_kind": "FULL_REFUND", "remedy_value": 0},
+                                  {"outcome": "ACCEPTED_NO_CONTEST", "clause_id": "", "remedy_kind": "FULL_REFUND", "remedy_value": 0}]], mfr, 0),
         ("fund_pool", [1], mfr, 3 * 10**15),
     ]:
         h, tx = send(addr, fn, args, acct, val)

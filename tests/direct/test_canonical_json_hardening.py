@@ -310,6 +310,7 @@ def test_clause_order_does_not_affect_stored_canonical_fields(direct_deploy, dir
         {"outcome": "COVERED", "clause_id": "C-001", "remedy_kind": "FULL_REFUND", "remedy_value": 0},
         {"outcome": "COVERED", "clause_id": "C-002", "remedy_kind": "FULL_REFUND", "remedy_value": 0},
         {"outcome": "NOT_COVERED", "clause_id": "", "remedy_kind": "NONE", "remedy_value": 0},
+        {"outcome": "ACCEPTED_NO_CONTEST", "clause_id": "", "remedy_kind": "FULL_REFUND", "remedy_value": 0},
     ]
 
     c1 = create_constitution(contract, program_id, version="A", covered_clauses=covered_forward, remedy_table=remedy)
@@ -342,10 +343,12 @@ def test_dict_key_order_in_clause_and_remedy_rows_does_not_affect_stored_fields(
     remedy_a = [
         {"outcome": "COVERED", "clause_id": "C-001", "remedy_kind": "FULL_REFUND", "remedy_value": 0},
         {"outcome": "NOT_COVERED", "clause_id": "", "remedy_kind": "NONE", "remedy_value": 0},
+        {"outcome": "ACCEPTED_NO_CONTEST", "clause_id": "", "remedy_kind": "FULL_REFUND", "remedy_value": 0},
     ]
     remedy_b = [
         {"remedy_value": 0, "remedy_kind": "FULL_REFUND", "clause_id": "C-001", "outcome": "COVERED"},
         {"clause_id": "", "outcome": "NOT_COVERED", "remedy_value": 0, "remedy_kind": "NONE"},
+        {"remedy_value": 0, "remedy_kind": "FULL_REFUND", "clause_id": "", "outcome": "ACCEPTED_NO_CONTEST"},
     ]
 
     c1 = create_constitution(contract, program_id, version="A", covered_clauses=covered_a, remedy_table=remedy_a)
@@ -375,6 +378,7 @@ def test_fingerprint_is_order_independent_for_fixed_program_and_version(direct_d
         {"outcome": "COVERED", "clause_id": "C-001", "remedy_kind": "FULL_REFUND", "remedy_value": 0},
         {"outcome": "COVERED", "clause_id": "C-002", "remedy_kind": "FULL_REFUND", "remedy_value": 0},
         {"outcome": "NOT_COVERED", "clause_id": "", "remedy_kind": "NONE", "remedy_value": 0},
+        {"outcome": "ACCEPTED_NO_CONTEST", "clause_id": "", "remedy_kind": "FULL_REFUND", "remedy_value": 0},
     ]
 
     constitution_id = create_constitution(

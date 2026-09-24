@@ -223,3 +223,12 @@ A Python contract cannot introspect whether a given transaction is `Finalized`. 
    **StudioNet gate:** confirm the withdrawal transfer is only executed after the withdrawal transaction is Finalized.
 5. A protocol appeal that overturns the deciding transaction is outside CLAUSE's control; CLAUSE's contract state follows
    whatever the network finalizes.
+
+
+---
+
+## Stage 4.5: audit of the challenge `corrections` representation
+
+Audited against bounded / exact-key / canonical / allow-listed / no-economics / no-constitution-or-evidence-change / validator-compatible / deterministic properties; all hold and are test-enforced
+(`test_stage45_freeze.py`). The Stage 4 deviation from the Stage 0 `corrected_field/corrected_value` shape is **retained**: one bounded `corrections` object, restricted per ground, merged into the original
+findings and re-validated by the Stage 3 checker; the corrected adjudication is derived deterministically. Details in `STAGE_4_5_CONTRACT_FREEZE.md` section 3.
