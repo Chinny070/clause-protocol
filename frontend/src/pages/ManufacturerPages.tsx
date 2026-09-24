@@ -95,10 +95,10 @@ function Console({ reader, id }: { reader: ClauseReader; id: number }) {
             <section className="plate" aria-labelledby="mg-h"><h2 id="mg-h">Manage capacity</h2>
               <div className="grid two">
                 <div><div className="field"><label htmlFor="fund">Add capacity (GEN)</label><input id="fund" inputMode="decimal" value={fund} onChange={(e) => setFund(e.target.value)} /></div>
-                  <TxButton spec={calls.fundPool(id, fundAtoms ?? 1n)} disabledReason={!w.ready ? "Connect a wallet on StudioNet." : fundAtoms === null || fundAtoms <= 0n ? "Enter a positive amount, e.g. 5 or 0.25." : null}
+                  <TxButton spec={calls.fundPool(id, fundAtoms !== null && fundAtoms > 0n ? fundAtoms : 1n)} disabledReason={!w.ready ? "Connect a wallet on StudioNet." : fundAtoms === null || fundAtoms <= 0n ? "Enter a positive amount, e.g. 5 or 0.25." : null}
                     reread={() => reader.getPool(id)} onDone={q.reload} description={`Sends ${fund || "?"} GEN into this program's capacity pool.`} /></div>
                 <div><div className="field"><label htmlFor="wd">Withdraw unreserved (GEN)</label><input id="wd" inputMode="decimal" value={wd} onChange={(e) => setWd(e.target.value)} /><p className="hint">Only unreserved capacity ({formatGen(d.pool.availableBalance)} GEN) can be withdrawn.</p></div>
-                  <TxButton variant="secondary" spec={calls.withdrawPool(id, wdAtoms ?? 1n)} disabledReason={!w.ready ? "Connect a wallet on StudioNet." : wdAtoms === null || wdAtoms <= 0n ? "Enter a positive amount." : wdAtoms > d.pool.availableBalance ? "That exceeds your unreserved capacity." : null}
+                  <TxButton variant="secondary" spec={calls.withdrawPool(id, wdAtoms !== null && wdAtoms > 0n ? wdAtoms : 1n)} disabledReason={!w.ready ? "Connect a wallet on StudioNet." : wdAtoms === null || wdAtoms <= 0n ? "Enter a positive amount." : wdAtoms > d.pool.availableBalance ? "That exceeds your unreserved capacity." : null}
                     reread={() => reader.getPool(id)} onDone={q.reload} description={`Withdraws ${wd || "?"} GEN of unreserved capacity to your wallet.`} /></div>
               </div>
             </section>
@@ -318,7 +318,7 @@ function Issue({ reader, programId }: { reader: ClauseReader; programId: number 
               {hex ? <p className="mono wrap small">{hex}</p> : null}</fieldset>
             <div className="grid two"><div className="field"><label htmlFor="cs">Coverage start (UTC date)</label><input id="cs" type="date" value={start} onChange={(e) => setStart(e.target.value)} /></div><div className="field"><label htmlFor="ce">Coverage end (UTC date)</label><input id="ce" type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></div></div>
             <div className="field"><label htmlFor="mr">Maximum remedy (GEN) — reserved from your capacity</label><input id="mr" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} /><p className="hint">Unreserved capacity now: {formatGen(avail)} GEN. This is a preview; the contract enforces the real limit.</p></div>
-            <TxButton spec={calls.issueWarranty({ programId, constitutionId: Number(cid) || 1, holder: holder || "0x", productModelId: model || "x", productCommitmentHex: hex || "0".repeat(64), coverageStart: ts(start) || 1, coverageEnd: ts(end) || 2, maxDeterministicRemedy: atoms ?? 1n })}
+            <TxButton spec={calls.issueWarranty({ programId, constitutionId: Number(cid) || 1, holder: holder || "0x", productModelId: model || "x", productCommitmentHex: hex || "0".repeat(64), coverageStart: ts(start) || 1, coverageEnd: ts(end) || 2, maxDeterministicRemedy: atoms !== null && atoms > 0n ? atoms : 1n })}
               disabledReason={reason} reread={() => reader.listPassportIds(programId)} onDone={() => nav(`/manufacturer/program/${programId}`)}
               description={`Issues a warranty to ${holder || "the holder"} for ${model || "the product"} and reserves up to ${amount || "?"} GEN. The terms version freezes now if it is not frozen already.`} />
           </section>

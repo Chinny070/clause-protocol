@@ -314,3 +314,17 @@ describe("issued warranties are commitments (V1 cancellation policy)", () => {
     expect(await screen.findByText(/Retiring a program stops future issuance\. Existing warranties remain governed by their frozen terms\./)).toBeInTheDocument();
   });
 });
+
+
+describe("amount inputs never crash the page while typing", () => {
+  it("typing 0 then 0.2 in Add capacity keeps the console rendered, disabled for 0 and enabled for 0.2", async () => {
+    const s = setup({});
+    renderApp({ path: "/manufacturer/program/1", transport: s.read, provider: makeProvider({ accounts: [MFR] }), writeTransport: s.write });
+    const input = await screen.findByLabelText("Add capacity (GEN)");
+    await userEvent.type(input, "0");
+    expect(screen.getByLabelText("Add capacity (GEN)")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Fund warranty capacity" })).toBeDisabled();
+    await userEvent.type(input, ".2");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Fund warranty capacity" })).toBeEnabled());
+  });
+});
