@@ -8,3 +8,7 @@ node_modules/
 
 .scratch/
 tests/integration/_response_probe_result.json
+
+.claude/
+frontend/dist/
+frontend/.env.local
