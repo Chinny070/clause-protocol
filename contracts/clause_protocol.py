@@ -223,7 +223,7 @@ CLAIM_DECIDED = "DECIDED"
 _TRI = ("PASS", "FAIL", "UNCLEAR")
 _SUFFICIENCY_MODEL = ("SUFFICIENT", "INSUFFICIENT")  # the model may never claim UNAVAILABLE
 _MAX_RATIONALE_LEN = 1000
-_MAX_EVIDENCE_IN_PROMPT = 10
+_MAX_ADJUDICABLE_EVIDENCE = 10  # hard per-claim cap on ELIGIBLE records, enforced at submit_evidence
 _MODEL_KEYS = frozenset(
     {"product_match", "covered_clause_ids", "exclusion_clause_ids", "evidence_sufficiency", "evidence_ids_relied_on", "rationale"}
 )
@@ -349,7 +349,9 @@ def _derive_outcome(product_match: str, version_match: str, window: str, suffici
       5 product FAIL -> NOT_COVERED, product UNCLEAR -> INSUFFICIENT_EVIDENCE
       6 established exclusion -> NOT_COVERED
       7 covered clause + all of product/window/version/source PASS + SUFFICIENT -> COVERED
-      8 otherwise (sufficient evidence, nothing covered established) -> NOT_COVERED"""
+      8 otherwise (sufficient evidence, nothing affirmatively established) -> INSUFFICIENT_EVIDENCE
+    NOT_COVERED is returned only for an affirmative reason: window FAIL, product FAIL, or an
+    established exclusion. It is never a catch-all for unresolved combinations."""
     if version_match == "FAIL":
         return "INVALID_CLAIM"
     if window == "FAIL":
@@ -367,7 +369,7 @@ def _derive_outcome(product_match: str, version_match: str, window: str, suffici
     if (len(covered) > 0 and product_match == "PASS" and window == "PASS" and version_match == "PASS"
             and source_authority == "PASS" and sufficiency == "SUFFICIENT"):
         return "COVERED"
-    return "NOT_COVERED"
+    return "INSUFFICIENT_EVIDENCE"
 
 
 def _structural_key(r: dict) -> str:
@@ -1424,6 +1426,18 @@ class ClauseProtocol(gl.Contract):
 
         policy_hosts = _parse_source_policy_hosts(constitution.source_eligibility_policy)
         is_eligible = parsed.scheme == _ALLOWED_SCHEME and _host_allowed(parsed.hostname, policy_hosts)
+        if is_eligible:
+            # Hard V1 cap: at most _MAX_ADJUDICABLE_EVIDENCE eligible (adjudicable) records per claim,
+            # counted over every prior submission in any transaction, before freeze. Ineligible
+            # records can never be adjudicated, so they do not consume adjudicable capacity.
+            prior_eligible = 0
+            for prior_id in json.loads(self.evidence_ids_by_claim_json.get(claim_id, "[]")):
+                if self.evidence[u32(prior_id)].eligibility == EVIDENCE_ELIGIBLE:
+                    prior_eligible += 1
+            _require(
+                prior_eligible < _MAX_ADJUDICABLE_EVIDENCE,
+                f"claim already has the maximum of {_MAX_ADJUDICABLE_EVIDENCE} adjudicable evidence records",
+            )
 
         evidence_id = self.next_evidence_id
         self.next_evidence_id = u32(evidence_id + 1)
@@ -1571,8 +1585,11 @@ class ClauseProtocol(gl.Contract):
             eligible_count += 1
             if rec.retrieval_status == RETRIEVAL_AVAILABLE and rec.available and rec.frozen_at != 0 and rec.claim_id == claim_id:
                 available_count += 1
-                if len(shown) < _MAX_EVIDENCE_IN_PROMPT:
-                    shown.append(rec)
+                shown.append(rec)  # every adjudicable record is shown; no slicing
+        _require(
+            len(shown) <= _MAX_ADJUDICABLE_EVIDENCE,
+            "invariant violated: more adjudicable evidence than the V1 cap",
+        )
 
         pre_sufficiency = None
         if eligible_count == 0:

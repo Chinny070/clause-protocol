@@ -156,8 +156,6 @@ addresses it (cross-referenced, not restated in full — see the linked doc for 
   plus a mutation check.
 - **Provider failure masquerading as success**: glsim returns provider errors as a *string*; the
   non-dict rejection handles it (observed on the real simulator).
-- **Evidence cap**: at most 10 available records are shown to the model (ids ascending); later frozen
-  records are not considered. A claim with more than 10 usable records is adjudicated on the first 10 -
-  a documented risk, recorded per adjudication in `evidence_ids_considered`.
+- **Evidence cap** (Stage 3.5): `submit_evidence` rejects an eligible record once the claim already has 10, counted over all prior submissions/parties/transactions before freeze; adjudication shows every adjudicable record and asserts the cap as an invariant. No silent truncation.
 - **Residual gaps** (unchanged protocol gates): undetermined-consensus rollback, real render, real model
   behaviour.

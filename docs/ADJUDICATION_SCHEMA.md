@@ -141,7 +141,7 @@ product PASS and SUFFICIENT; product FAIL forbids a covered clause.
 5. `product_match = FAIL` -> `NOT_COVERED`; `= UNCLEAR` -> `INSUFFICIENT_EVIDENCE`
 6. any established exclusion -> `NOT_COVERED`
 7. covered clause established AND product/window/version/source all PASS AND SUFFICIENT -> `COVERED`
-8. otherwise (sufficient evidence, nothing covered established) -> `NOT_COVERED`
+8. otherwise (sufficient evidence, nothing affirmatively established) -> `INSUFFICIENT_EVIDENCE` (Stage 3.5; was `NOT_COVERED`)
 
 Rules 1-3 and the no-evidence cases are decided **without consulting the model at all**
 (`decision_path` = `DETERMINISTIC_PREDICATE | DETERMINISTIC_NO_ADMISSIBLE_EVIDENCE |
@@ -166,7 +166,7 @@ model call fails or is malformed votes `False`; it never raises.
 `constitution_version`, `product_scope`, `coverage_calc`, `targeted_covered_clauses[{clause_id,text}]`,
 `exclusion_clauses[{clause_id,text}]`. *claim_facts*: `claim_id`, `registered_product_model`,
 `failure_date_asserted_by_claimant_unverified`, `coverage_start`, `coverage_end`,
-`protocol_determined{warranty_version_match, coverage_window}`. *evidence* (at most 10; `ELIGIBLE` +
+`protocol_determined{warranty_version_match, coverage_window}`. *evidence* (every adjudicable record, hard-capped at 10 per claim at submission; `ELIGIBLE` +
 `AVAILABLE` + frozen only): `evidence_id`, `category`, `submitted_by` (HOLDER|MANUFACTURER),
 `source_host`, `retrieved_at`, `content`. **Never in the prompt** (test-enforced): pool balances,
 reserved/available capacity, remedy table/values, `max_deterministic_remedy`, reservation data,

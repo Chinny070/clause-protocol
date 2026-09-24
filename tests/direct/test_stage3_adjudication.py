@@ -29,7 +29,7 @@ def test_clearly_covered(direct_deploy, direct_vm, direct_accounts):
 
 def test_clearly_not_covered_sufficient_evidence_but_no_covered_condition(direct_deploy, direct_vm, direct_accounts):
     env, a = _run(direct_deploy, direct_vm, direct_accounts, model_result(covered=()))
-    assert a["outcome"] == "NOT_COVERED" and a["evidence_sufficiency"] == "SUFFICIENT"
+    assert a["outcome"] == "INSUFFICIENT_EVIDENCE" and a["evidence_sufficiency"] == "SUFFICIENT"
 
 
 def test_insufficient_evidence(direct_deploy, direct_vm, direct_accounts):
@@ -90,7 +90,7 @@ def test_ambiguous_fails_safe_and_is_never_forced_into_covered(direct_deploy, di
 
 @pytest.mark.parametrize("reply, expected", [
     (model_result(), "COVERED"),
-    (model_result(covered=()), "NOT_COVERED"),
+    (model_result(covered=()), "INSUFFICIENT_EVIDENCE"),
     (model_result(product_match="FAIL", covered=()), "NOT_COVERED"),
     (model_result(product_match="UNCLEAR", covered=()), "INSUFFICIENT_EVIDENCE"),
     (model_result(covered=(), exclusions=("X-001",)), "NOT_COVERED"),
