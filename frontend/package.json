@@ -10,7 +10,8 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint src tests",
     "test": "vitest run",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "deploy:tool": "vite --config vite.deploy.config.ts"
   },
   "dependencies": {
     "genlayer-js": "1.1.8",

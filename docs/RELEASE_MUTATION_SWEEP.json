@@ -1,0 +1,134 @@
+{
+  "audited_sha256": "07d7e4bfdbaeeba2d30129c00034cd728681ed99877286a16189005fbe7d847e",
+  "results": [
+    {
+      "guard": "authorization: only the holder may file a claim",
+      "tests": [
+        "tests/direct/test_stage2_claims.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "authorization: only the manufacturer may respond",
+      "tests": [
+        "tests/direct/test_stage2_response.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "evidence immutability: no submission after freeze",
+      "tests": [
+        "tests/direct/test_stage2_freeze_and_fingerprint.py"
+      ],
+      "result": "SURVIVED"
+    },
+    {
+      "guard": "source eligibility: exact host policy",
+      "tests": [
+        "tests/direct/test_stage2_source_eligibility.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "evidence cap: 10 adjudicable records",
+      "tests": [
+        "tests/direct/test_stage3_5_hardening.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "adjudication validation: covered clauses must be targeted",
+      "tests": [
+        "tests/direct/test_stage3_malformed_output.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "adjudication: one adjudication per claim",
+      "tests": [
+        "tests/direct/test_stage3_adjudication.py"
+      ],
+      "result": "SURVIVED"
+    },
+    {
+      "guard": "challenge validation: corrections limited to the ground's fields",
+      "tests": [
+        "tests/direct/test_stage4_challenge.py",
+        "tests/direct/test_stage45_freeze.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "challenge: window closes exactly at the frozen deadline",
+      "tests": [
+        "tests/direct/test_stage4_challenge.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "remedy completeness at constitution creation",
+      "tests": [
+        "tests/direct/test_stage45_freeze.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "reservation accounting: settlement capped by remaining reservation",
+      "tests": [
+        "tests/direct/test_stage4_economics.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "withdrawal: only the recorded recipient",
+      "tests": [
+        "tests/direct/test_stage4_economics.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "double withdrawal guard",
+      "tests": [
+        "tests/direct/test_stage4_economics.py",
+        "tests/direct/test_stage4_lifecycle.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "claim deadline boundary",
+      "tests": [
+        "tests/direct/test_stage2_claims.py",
+        "tests/direct/test_temporal.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "response deadline boundary",
+      "tests": [
+        "tests/direct/test_stage2_response.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "reservation release waits for the claim-deadline grace",
+      "tests": [
+        "tests/direct/test_stage45_freeze.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "reservation release blocked by unsettled claims",
+      "tests": [
+        "tests/direct/test_stage45_freeze.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "no finalize while the challenge window is open",
+      "tests": [
+        "tests/direct/test_stage4_lifecycle.py"
+      ],
+      "result": "KILLED"
+    }
+  ]
+}

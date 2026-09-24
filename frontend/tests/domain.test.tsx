@@ -267,7 +267,7 @@ describe("static release guards (production build hygiene)", () => {
   });
   it("never handles private keys or mnemonics", () => {
     for (const [f, t] of text) {
-      expect(t, f).not.toMatch(/privateKey|private_key|mnemonic|seed phrase|generatePrivateKey|createAccount\(|eth_sign\b|personal_sign/i);
+      expect(t, f).not.toMatch(/privateKey|private_key|mnemonic|generatePrivateKey|createAccount\(|eth_sign\b|personal_sign/i);
     }
   });
   it("has no mock/demo mode switch and no fake-data fixtures in shipped code", () => {

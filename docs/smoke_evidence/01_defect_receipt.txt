@@ -1,0 +1,7 @@
+ACME WIDGETS - SERVICE REPORT
+Product model: WIDGET-SMOKE-001
+Report date: (any)
+Finding: The unit stopped charging within the warranty period. Inspection found a failed
+internal charging component. This is a manufacturing defect in workmanship. There is no sign of
+impact, liquid ingress, or any misuse.
+Recommendation: replacement under warranty.

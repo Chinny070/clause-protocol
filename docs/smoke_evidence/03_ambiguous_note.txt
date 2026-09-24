@@ -1,0 +1,4 @@
+ACME WIDGETS - TECHNICIAN NOTE (PRELIMINARY)
+Product model: WIDGET-SMOKE-001
+The unit was returned with a charging problem. The technician could not tell whether the fault
+is a manufacturing defect or was caused by an earlier drop; further testing was not done.
