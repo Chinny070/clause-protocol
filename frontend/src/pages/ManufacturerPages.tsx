@@ -232,9 +232,9 @@ function TermsWizard({ reader, programId }: { reader: ClauseReader; programId: n
             <p className="hint">A category ending in <code>_RENDERED</code> is retrieved with a browser render instead of a plain fetch (a StudioNet-gated capability).</p></div></section>
         <section className="plate"><h2>4 · Timing and gaps</h2>
           <div className="grid three">
-            <div className="field"><label htmlFor="cd">Claim deadline (days after coverage ends)</label><input id="cd" type="number" min={0} value={d.claimDeadlineDays} onChange={(e) => set("claimDeadlineDays", Number(e.target.value))} /></div>
-            <div className="field"><label htmlFor="rd">Manufacturer response (days)</label><input id="rd" type="number" min={0} value={d.responseDays} onChange={(e) => set("responseDays", Number(e.target.value))} /></div>
-            <div className="field"><label htmlFor="cw">Application Challenge window (days)</label><input id="cw" type="number" min={0} value={d.challengeWindowDays} onChange={(e) => set("challengeWindowDays", Number(e.target.value))} /></div>
+            <div className="field"><label htmlFor="cd">Claim deadline (days after coverage ends)</label><input id="cd" type="number" step="any" min={0} value={d.claimDeadlineDays} onChange={(e) => set("claimDeadlineDays", Number(e.target.value))} /></div>
+            <div className="field"><label htmlFor="rd">Manufacturer response (days)</label><input id="rd" type="number" step="any" min={0} value={d.responseDays} onChange={(e) => set("responseDays", Number(e.target.value))} /></div>
+            <div className="field"><label htmlFor="cw">Application Challenge window (days)</label><input id="cw" type="number" step="any" min={0} value={d.challengeWindowDays} onChange={(e) => set("challengeWindowDays", Number(e.target.value))} /></div>
           </div>
           <label className="check"><input type="checkbox" checked={d.challengeEnabled} onChange={(e) => set("challengeEnabled", e.target.checked)} /><span>Allow one Application Challenge per claim</span></label>
           <div className="grid two">
