@@ -1,0 +1,376 @@
+{
+  "steps": [
+    {
+      "fn": "create_program",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000002",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "create_constitution",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000003",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "fund_pool",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000004",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "issue_warranty",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000005",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "file_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000006",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "respond_to_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000007",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "submit_evidence",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000008",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "submit_evidence",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000009",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "submit_evidence",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000a",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "freeze_evidence",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000b",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "freeze_evidence",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000c",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_result_status": "rollback",
+      "leader_stderr": "UserError(message='claim is not in a state ready for evidence freeze')"
+    },
+    {
+      "fn": "submit_evidence",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000d",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_result_status": "rollback",
+      "leader_stderr": "UserError(message='claim is not in a state that accepts evidence')"
+    },
+    {
+      "fn": "file_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000e",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "respond_to_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000f",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "submit_evidence",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000010",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "freeze_evidence",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000011",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_result_status": "return",
+      "leader_stderr": ""
+    }
+  ],
+  "deploy": {
+    "address": "0x00dd556e9b80d039bdd9c6f3f268b76a0d9f2005",
+    "status_name": "FINALIZED",
+    "votes": {
+      "0x0000000000000000000000000000000000000000": "agree",
+      "0x0000000000000000000000000000000000000001": "agree",
+      "0x0000000000000000000000000000000000000002": "agree",
+      "0x0000000000000000000000000000000000000003": "agree",
+      "0x0000000000000000000000000000000000000004": "agree"
+    }
+  },
+  "claim_before_freeze": {
+    "claim_id": 1,
+    "constitution_fingerprint": "e318958dcdc5ca5b63e9c52707db6cbe1609586d759af5d37fbc2066eda4440a",
+    "constitution_id": 1,
+    "evidence_frozen_at": 0,
+    "failure_asserted_at": 1790227022,
+    "filed_at": 1790227022,
+    "holder": "0x9CaD51C1966b250ED9033779e3b4ECD3872F2947",
+    "manufacturer": "0x7bae61335CaCd385577FE9Dc24657391Fa717072",
+    "manufacturer_response": "DISPUTE",
+    "program_id": 1,
+    "responded_at": 1790227022,
+    "response_deadline": 1791436622,
+    "status": "DISPUTED",
+    "targeted_clause_ids": [
+      "C-001"
+    ],
+    "warranty_id": 1
+  },
+  "freeze_receipt_consensus": {
+    "status_name": "FINALIZED",
+    "votes": {
+      "0x0000000000000000000000000000000000000000": "agree",
+      "0x0000000000000000000000000000000000000001": "agree",
+      "0x0000000000000000000000000000000000000002": "agree",
+      "0x0000000000000000000000000000000000000003": "agree",
+      "0x0000000000000000000000000000000000000004": "agree"
+    },
+    "leader_eq_outputs": {}
+  },
+  "claim_after_freeze": {
+    "claim_id": 1,
+    "constitution_fingerprint": "e318958dcdc5ca5b63e9c52707db6cbe1609586d759af5d37fbc2066eda4440a",
+    "constitution_id": 1,
+    "evidence_frozen_at": 1790227022,
+    "failure_asserted_at": 1790227022,
+    "filed_at": 1790227022,
+    "holder": "0x9CaD51C1966b250ED9033779e3b4ECD3872F2947",
+    "manufacturer": "0x7bae61335CaCd385577FE9Dc24657391Fa717072",
+    "manufacturer_response": "DISPUTE",
+    "program_id": 1,
+    "responded_at": 1790227022,
+    "response_deadline": 1791436622,
+    "status": "EVIDENCE_FROZEN",
+    "targeted_clause_ids": [
+      "C-001"
+    ],
+    "warranty_id": 1
+  },
+  "evidence_after_freeze": [
+    {
+      "available": true,
+      "category": "RECEIPT",
+      "claim_id": 1,
+      "eligibility": "ELIGIBLE",
+      "evidence_id": 1,
+      "extracted_content": "<!doctype html><html lang=\"en\"><head><title>Example Domain</title><link rel=\"icon\" href=\"data:,\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><style>body{background:#eee;width:60vw;margin:15vh auto;font-family:system-ui,sans-serif}h1{font-size:1.5em}div{opacity:0.8}a:link,a:visited{color:#348}</style></head><body><div><h1>Example Domain</h1><p>This domain is for use in documentation examples without needing permission. Avoid use in operations.</p><p><a href=\"https://iana.org/domains/example\">Learn more</a></p></div></body></html>",
+      "fingerprint": "020beabeb7cb52688a73a5c7937b2c87e9b0396a2300c6dec502e2072a96321f",
+      "frozen_at": 1790227022,
+      "host": "example.org",
+      "original_url": "https://example.org/",
+      "retrieval_method": "GET",
+      "retrieval_status": "AVAILABLE",
+      "retrieved_at": 1790227022,
+      "submitted_at": 1790227022,
+      "submitter": "0x9CaD51C1966b250ED9033779e3b4ECD3872F2947"
+    },
+    {
+      "available": false,
+      "category": "RECEIPT",
+      "claim_id": 1,
+      "eligibility": "ELIGIBLE",
+      "evidence_id": 2,
+      "extracted_content": "",
+      "fingerprint": "81dcb2e114e9da06a44d99757e04265cd152cd7b5aad2d7bab004ae1328ecc4f",
+      "frozen_at": 1790227022,
+      "host": "example.org",
+      "original_url": "https://example.org/stage25-missing-page",
+      "retrieval_method": "GET",
+      "retrieval_status": "FETCH_FAILED",
+      "retrieved_at": 1790227022,
+      "submitted_at": 1790227022,
+      "submitter": "0x9CaD51C1966b250ED9033779e3b4ECD3872F2947"
+    },
+    {
+      "available": false,
+      "category": "RECEIPT",
+      "claim_id": 1,
+      "eligibility": "INELIGIBLE",
+      "evidence_id": 3,
+      "extracted_content": "",
+      "fingerprint": "",
+      "frozen_at": 0,
+      "host": "not-allowed.example",
+      "original_url": "https://not-allowed.example/page",
+      "retrieval_method": "GET",
+      "retrieval_status": "",
+      "retrieved_at": 0,
+      "submitted_at": 1790227022,
+      "submitter": "0x9CaD51C1966b250ED9033779e3b4ECD3872F2947"
+    }
+  ],
+  "independent_fingerprint_e1": "020beabeb7cb52688a73a5c7937b2c87e9b0396a2300c6dec502e2072a96321f",
+  "immutability": "re-freeze and post-freeze submit both ERROR/rollback; records byte-identical on reread",
+  "render_evidence_glsim_emulated": {
+    "available": true,
+    "category": "PAGE_RENDERED",
+    "claim_id": 2,
+    "eligibility": "ELIGIBLE",
+    "evidence_id": 4,
+    "extracted_content": "<!doctype html><html lang=\"en\"><head><title>Example Domain</title><link rel=\"icon\" href=\"data:,\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><style>body{background:#eee;width:60vw;margin:15vh auto;font-family:system-ui,sans-serif}h1{font-size:1.5em}div{opacity:0.8}a:link,a:visited{color:#348}</style></head><body><div><h1>Example Domain</h1><p>This domain is for use in documentation examples without needing permission. Avoid use in operations.</p><p><a href=\"https://iana.org/domains/example\">Learn more</a></p></div></body></html>",
+    "fingerprint": "aa6a80e0f929c7bad4bd590cd81f3bc5b69f54c71d2895af12a52e2f2cea9615",
+    "frozen_at": 1790227022,
+    "host": "example.org",
+    "original_url": "https://example.org/",
+    "retrieval_method": "RENDER",
+    "retrieval_status": "AVAILABLE",
+    "retrieved_at": 1790227022,
+    "submitted_at": 1790227022,
+    "submitter": "0x9CaD51C1966b250ED9033779e3b4ECD3872F2947"
+  }
+}

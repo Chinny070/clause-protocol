@@ -5,3 +5,6 @@ __pycache__/
 node_modules/
 .env
 *.log
+
+.scratch/
+tests/integration/_response_probe_result.json

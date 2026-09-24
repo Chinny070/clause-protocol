@@ -149,3 +149,31 @@ Stage 2 code calls `gl.nondet.web.*` bare in a write-method body.
 No blocking documentation/installed-API conflict remains unresolved. The one conflict found
 (`status` vs `status_code`) is resolved in favor of the installed source, which is what
 actually executes.
+
+
+## Stage 2.5 empirical addendum (real simulator run, 2026-09-24)
+
+Full detail: `STAGE_2_5_REAL_WEB_VERIFICATION.md`; raw data: `docs/STAGE_2_5_RESPONSE_PROBE.json`.
+
+- **`Response` fields, observed at runtime (glsim 0.29.2, pinned runner):** type `Response`
+  (module `genlayer.gl.nondet.web`), public attributes exactly `body`, `headers`, `status`;
+  `status` is an `int` (200), `hasattr(r, "status_code")` is `False`, `body` is `bytes`. The
+  installed-source finding above is **empirically confirmed**; the docs' `.status_code` prose is
+  wrong for this SDK. No compatibility guessing was added.
+- **`render(mode="text")` on glsim is not real rendering.** It returned the raw HTTP body
+  (`<!doctype html>…`, byte-identical to `get`), because glsim implements `WebRender` as a
+  plain GET and ignores `mode`/`wait_after_loaded`. The call itself succeeded and reached
+  consensus, but genuine render behaviour remains **unverified** (StudioNet release gate).
+- **Validators really re-fetch.** glsim re-runs each captured `validator_fn`, so each of the 5
+  validators performs its own live `gl.nondet.web.get`. Disagreement was directly observed
+  with a volatile source (`httpbin.org/uuid`).
+- **The "direct-mode never runs validators" limitation above had a real consequence:** it hid a
+  late-binding closure bug in `freeze_evidence` (fixed in Stage 2.5). Any future
+  `run_nondet_unsafe` code must be tested by replaying **every** captured validator via
+  `direct_vm.run_validator(index=i)`, not only by checking the leader's stored result.
+- **Stale reference corrected:** the bullet above citing `test_leader_exception_leaves_no_partial_
+  evidence_state` refers to a test that was rewritten during Stage 2 as
+  `test_fetch_evidence_once_never_raises_for_ordinary_failures` (ordinary retrieval failures are
+  caught inside `_fetch_evidence_once` and never escape). Mid-transaction atomic rollback is
+  **not** verifiable in direct-mode, and glsim does not model it faithfully either (see
+  `STAGE_2_5_REAL_WEB_VERIFICATION.md` §10).

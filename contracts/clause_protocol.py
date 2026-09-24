@@ -187,6 +187,32 @@ def _fetch_evidence_once(url: str, method: str) -> dict:
         return {"status": RETRIEVAL_UNAVAILABLE, "content": ""}
 
 
+def _retrieve_via_consensus(url: str, method: str) -> dict:
+    """Runs ONE evidence record's retrieval through GenVM's leader/validator equivalence
+    check, with `url`/`method` bound as this call's own parameters. This must be its own
+    function, not closures defined inside freeze_evidence's loop: loop variables are captured
+    by reference, so a validator that runs after the loop finishes (as it does in glsim, and
+    can in any runtime that replays validators after execution) would otherwise re-fetch the
+    LAST record's URL instead of its own and spuriously disagree with the leader. Found by the
+    Stage 2.5 real-simulator run; see STAGE_2_5_REAL_WEB_VERIFICATION.md."""
+
+    def leader_fn():
+        return _fetch_evidence_once(url, method)
+
+    def validator_fn(leader_result):
+        if not isinstance(leader_result, gl.vm.Return):
+            return False
+        validator_data = _fetch_evidence_once(url, method)
+        leader_data = leader_result.calldata
+        if leader_data["status"] != validator_data["status"]:
+            return False
+        if leader_data["status"] == RETRIEVAL_AVAILABLE:
+            return leader_data["content"] == validator_data["content"]
+        return True  # both sides agree on a non-AVAILABLE status; content is moot
+
+    return gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
+
+
 def _coerce_address(val) -> Address:
     """Accept Address, hex/base64 str, raw bytes, or a plain int (observed live on
     StudioNet for address-typed arguments - see docs/NETWORK_AND_SDK_VERIFICATION.md and
@@ -1238,24 +1264,7 @@ class ClauseProtocol(gl.Contract):
             if record.retrieval_status != RETRIEVAL_PENDING:
                 continue  # idempotency guard - a record is only ever processed once
 
-            url = record.original_url
-            method = record.retrieval_method
-
-            def leader_fn():
-                return _fetch_evidence_once(url, method)
-
-            def validator_fn(leader_result):
-                if not isinstance(leader_result, gl.vm.Return):
-                    return False
-                validator_data = _fetch_evidence_once(url, method)
-                leader_data = leader_result.calldata
-                if leader_data["status"] != validator_data["status"]:
-                    return False
-                if leader_data["status"] == RETRIEVAL_AVAILABLE:
-                    return leader_data["content"] == validator_data["content"]
-                return True  # both sides agree on a non-AVAILABLE status; content is moot
-
-            result = gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
+            result = _retrieve_via_consensus(record.original_url, record.retrieval_method)
 
             record.retrieval_status = result["status"]
             record.extracted_content = result["content"]

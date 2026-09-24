@@ -1,0 +1,56 @@
+{
+  "deploy_tx": "0x0000000000000000000000000000000000000000000000000000000000000001",
+  "address": "0x17c4f962ca873dcb7668d5358c4486b06077c362",
+  "get_tx": "0x0000000000000000000000000000000000000000000000000000000000000002",
+  "get_status": "FINALIZED",
+  "get_votes": {
+    "0x0000000000000000000000000000000000000000": "agree",
+    "0x0000000000000000000000000000000000000001": "agree",
+    "0x0000000000000000000000000000000000000002": "agree",
+    "0x0000000000000000000000000000000000000003": "agree",
+    "0x0000000000000000000000000000000000000004": "agree"
+  },
+  "get_leader": "SUCCESS",
+  "get_observed": {
+    "body_head": "<!doctype html><html lang=\"en\"><head><title>Example Domain</title><link rel=\"ico",
+    "body_len": 559,
+    "body_type": "bytes",
+    "has_status": true,
+    "has_status_code": false,
+    "header_count": 12,
+    "module": "genlayer.gl.nondet.web",
+    "ok": true,
+    "public_attrs": [
+      "body",
+      "headers",
+      "status"
+    ],
+    "status": 200,
+    "status_type": "int",
+    "type": "Response"
+  },
+  "render_tx": "0x0000000000000000000000000000000000000000000000000000000000000003",
+  "render_status": "FINALIZED",
+  "render_votes": {
+    "0x0000000000000000000000000000000000000000": "agree",
+    "0x0000000000000000000000000000000000000001": "agree",
+    "0x0000000000000000000000000000000000000002": "agree",
+    "0x0000000000000000000000000000000000000003": "agree",
+    "0x0000000000000000000000000000000000000004": "agree"
+  },
+  "render_leader": {
+    "execution_result": "SUCCESS",
+    "result": {
+      "raw": "AAA=",
+      "status": "return",
+      "payload": {
+        "raw": [
+          0
+        ],
+        "readable": "null"
+      }
+    },
+    "stderr": ""
+  },
+  "render_observed": "{\"head\": \"<!doctype html><html lang=\\\"en\\\"><head><title>Example Domain</title><link rel=\\\"icon\\\" href=\\\"data:,\\\"><meta name=\\\"viewport\\\" c\", \"len\": 559, \"ok\": true, \"type\": \"str\"}"
+}

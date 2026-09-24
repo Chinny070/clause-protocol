@@ -6,3 +6,5 @@ requires-python = ">=3.12"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# tests/integration needs a LIVE simulator (scripts/run_real_web.sh); never part of the default run.
+norecursedirs = ["integration"]

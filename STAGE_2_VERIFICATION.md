@@ -286,3 +286,20 @@ insertions). Preceding history: `ba1dd44`/`5cc7053` (Stage 1 hardening pass), `f
 ## 20. Required statement
 
 **No production deployment was performed and no user wallet/private key was used.**
+
+
+## Stage 2.5 addendum — real-web gap closed (2026-09-24)
+
+The §12/§15 blocker (no real-runtime retrieval test) is **closed for `gl.nondet.web.get`** by
+`STAGE_2_5_REAL_WEB_VERIFICATION.md`: the full lifecycle ran through the official local
+simulator with no mocks, reached 5/5 validator agreement, committed the freeze, and matched an
+independently recomputed fingerprint. Two items remain as StudioNet release gates: genuine
+`render(mode="text")` and real undetermined-consensus rollback (glsim models neither
+faithfully).
+
+**Correction to §13 ("No bugs were found in … the freeze idempotency guards"):** Stage 2.5
+found one real contract bug this report missed — `freeze_evidence` defined its
+`leader_fn`/`validator_fn` closures inside a loop, capturing `url`/`method` by reference, so a
+replayed validator fetched the last record's URL. Fixed via `_retrieve_via_consensus(url,
+method)`; regression test `tests/direct/test_stage2_validator_replay.py` (fails before, passes
+after). Direct-mode test count is now **188** (was 187). This report's other findings stand.
