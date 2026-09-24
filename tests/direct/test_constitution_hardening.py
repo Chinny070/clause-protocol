@@ -58,6 +58,15 @@ EXPECTED_WRITE_METHODS = {
     "freeze_evidence",
     # Stage 3 addition - reads the frozen constitution, must never write it.
     "adjudicate_claim",
+    # Stage 4 additions - application challenge, finality, settlement, withdrawal. They read the
+    # frozen constitution and must never write it.
+    "file_challenge",
+    "resolve_challenge",
+    "execute_remand",
+    "lapse_challenge",
+    "finalize_claim",
+    "settle_claim",
+    "withdraw_settlement",
 }
 
 
@@ -138,7 +147,7 @@ def test_every_non_constitution_write_method_leaves_frozen_constitution_untouche
         max_remedy=1 * ONE_GEN, coverage_start=now, coverage_end=now + 10, commitment_seed=3,
     )
     assert_unchanged("issue_warranty (third issuance, before warp)")
-    direct_vm.warp(_iso(now + 20))
+    direct_vm.warp(_iso(now + 20 + 30 * 24 * 3600))  # past the claim-deadline grace
     contract.release_expired_reservation(short_warranty_id)
     assert_unchanged("release_expired_reservation")
 
@@ -162,6 +171,29 @@ def test_every_non_constitution_write_method_leaves_frozen_constitution_untouche
     assert_unchanged("freeze_evidence")
     adjudicate(contract, direct_vm, claim_id, other_holder)  # deterministic path (source ineligible); reads constitution only
     assert_unchanged("adjudicate_claim")
+
+    # Stage 4 write methods (deterministic TEMPORAL_ERROR challenge; nothing here needs a model).
+    direct_vm.sender = other_holder
+    contract.file_challenge(
+        claim_id=claim_id, ground="TEMPORAL_ERROR", explanation="Check the window.",
+        citation={"evidence_ids": [], "clause_ids": [], "constitution_id": 0, "timestamp_field": "failure_asserted_at"},
+    )
+    assert_unchanged("file_challenge")
+    with pytest.raises(Exception):
+        contract.lapse_challenge(claim_id=claim_id)  # not lapsed yet
+    assert_unchanged("lapse_challenge (rejected)")
+    with pytest.raises(Exception):
+        contract.execute_remand(claim_id=claim_id)  # no remand pending
+    assert_unchanged("execute_remand (rejected)")
+    contract.resolve_challenge(claim_id=claim_id)
+    assert_unchanged("resolve_challenge")
+    contract.finalize_claim(claim_id=claim_id)
+    assert_unchanged("finalize_claim")
+    contract.settle_claim(claim_id=claim_id)
+    assert_unchanged("settle_claim")
+    with pytest.raises(Exception):
+        contract.withdraw_settlement(claim_id=claim_id)  # zero claimable
+    assert_unchanged("withdraw_settlement (rejected)")
 
     # retire_program is terminal - exercised last.
     direct_vm.sender = manufacturer

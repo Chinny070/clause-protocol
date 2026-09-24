@@ -181,3 +181,32 @@ validator disagreement/consensus failure): the transaction reverts; no `Adjudica
 `EVIDENCE_FROZEN` and remains adjudicable. `DECIDED` is *not* terminal (Stage 4:
 `CHALLENGE_WINDOW -> FINAL -> SETTLED`); like `ACCEPTED`/`EVIDENCE_FROZEN` it does not block filing a
 new claim on the same warranty (preserves Stage 2 behaviour).
+
+
+---
+
+## Stage 4 as-implemented: from DECIDED to settled
+
+Claim states added (stored `Claim.status`; the Stage 2 `Claim` struct is unchanged): `CHALLENGED`, `CHALLENGE_RESOLVED`,
+`FINAL`, `SETTLED`. (Withdrawal is tracked on `FinalDecision`, not as a claim state.)
+
+| From | Method | Guard | To |
+|---|---|---|---|
+| `DECIDED` | `file_challenge` (holder/manufacturer) | window open, no prior challenge, `challenge_depth >= 1`, valid ground+citation | `CHALLENGED` |
+| `CHALLENGED` (OPEN) | `resolve_challenge` (anyone) | within `filed_at + challenge_window_s` | `CHALLENGE_RESOLVED` (UPHELD / REVERSED / INVALID) or stays `CHALLENGED` (REMAND_PENDING) |
+| `CHALLENGED` (REMAND_PENDING) | `execute_remand` (anyone, once) | within the same deadline | `CHALLENGE_RESOLVED` |
+| `CHALLENGED` | `lapse_challenge` (anyone) | `now > filed_at + challenge_window_s` | `CHALLENGE_RESOLVED` (INVALID, original stands) |
+| `ACCEPTED` | `finalize_claim` (anyone) | none (no window) | `FINAL` |
+| `DECIDED` | `finalize_claim` (anyone) | no challenge AND (`now > challenge_window_closes_at` or `challenge_depth == 0`) | `FINAL` |
+| `CHALLENGE_RESOLVED` | `finalize_claim` (anyone) | none | `FINAL` |
+| `FINAL` | `settle_claim` (anyone) | not settled | `SETTLED` |
+| `SETTLED` | `withdraw_settlement` (recorded recipient) | `claimable > 0`, not withdrawn | (unchanged; `withdrawn_at` set) |
+
+`file_claim` now also permits a new claim on a warranty whose earlier claims are in `CHALLENGED`, `CHALLENGE_RESOLVED`,
+`FINAL` or `SETTLED` (only claims still in the response/dispute phase block it).
+
+`cancel_warranty` and `release_expired_reservation` require every claim on the warranty to be `SETTLED`;
+`release_expired_reservation` additionally waits out the claim-deadline grace window.
+
+Failed/undetermined semantic steps (`resolve_challenge`, `execute_remand`) write nothing before the consensus block
+returns, so they leave the claim and challenge exactly as they were (retryable until the lapse deadline).

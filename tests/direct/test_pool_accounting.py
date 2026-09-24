@@ -116,7 +116,7 @@ def test_release_expired_reservation_frees_capacity(direct_deploy, direct_vm, di
         max_remedy=6 * ONE_GEN, coverage_start=now, coverage_end=now + 100,
     )
 
-    direct_vm.warp(_iso(now + 200))  # past coverage_end
+    direct_vm.warp(_iso(now + 200 + 30 * 24 * 3600))  # past coverage_end AND the 30-day claim-deadline grace  # past coverage_end
     contract.release_expired_reservation(warranty_id)
 
     pool = contract.get_pool(program_id)
@@ -138,7 +138,7 @@ def test_new_warranty_after_release_succeeds(direct_deploy, direct_vm, direct_ac
         contract, direct_vm, program_id, constitution_id, manufacturer, holder,
         max_remedy=6 * ONE_GEN, coverage_start=now, coverage_end=now + 100, commitment_seed=1,
     )
-    direct_vm.warp(_iso(now + 200))
+    direct_vm.warp(_iso(now + 200 + 30 * 24 * 3600))  # past coverage_end AND the 30-day claim-deadline grace
     contract.release_expired_reservation(warranty_id)
 
     # A fresh warranty should now succeed against the freed capacity.
@@ -164,7 +164,7 @@ def test_double_release_reverts(direct_deploy, direct_vm, direct_accounts):
         contract, direct_vm, program_id, constitution_id, manufacturer, holder,
         max_remedy=6 * ONE_GEN, coverage_start=now, coverage_end=now + 100,
     )
-    direct_vm.warp(_iso(now + 200))
+    direct_vm.warp(_iso(now + 200 + 30 * 24 * 3600))  # past coverage_end AND the 30-day claim-deadline grace
     contract.release_expired_reservation(warranty_id)
 
     with pytest.raises(Exception):

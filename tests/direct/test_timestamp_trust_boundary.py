@@ -143,9 +143,10 @@ def test_reservation_created_and_released_at_match_protocol_time(direct_deploy, 
     reservation_id = contract.get_passport(warranty_id)["reservation_id"]
     assert contract.get_reservation(reservation_id)["created_at"] == 2_100_000_000
 
-    direct_vm.warp(_iso(2_100_000_200))
+    release_time = 2_100_000_200 + 30 * 24 * 3600  # past coverage_end AND the 30-day claim-deadline grace
+    direct_vm.warp(_iso(release_time))
     contract.release_expired_reservation(warranty_id)
-    assert contract.get_reservation(reservation_id)["released_at"] == 2_100_000_200
+    assert contract.get_reservation(reservation_id)["released_at"] == release_time
 
 
 def test_now_is_read_live_not_cached_across_calls(direct_deploy, direct_vm, direct_accounts):

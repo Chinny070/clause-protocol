@@ -1,0 +1,628 @@
+{
+  "steps": [
+    {
+      "fn": "create_program",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000002",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "create_constitution",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000003",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "fund_pool",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000004",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "issue_warranty",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000005",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "issue_warranty",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000006",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "file_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000007",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "respond_to_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000008",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "adjudicate_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000009",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_stderr": "UserError(message='claim is not in the frozen-evidence state')"
+    },
+    {
+      "fn": "withdraw_settlement",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000a",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_stderr": "UserError(message='claim has no final decision')"
+    },
+    {
+      "fn": "settle_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000b",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_stderr": "UserError(message='claim is not final')"
+    },
+    {
+      "fn": "finalize_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000c",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "finalize_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000d",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_stderr": "UserError(message='claim is already finalized')"
+    },
+    {
+      "fn": "settle_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000e",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "settle_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000000f",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_stderr": "UserError(message='claim is not final')"
+    },
+    {
+      "fn": "withdraw_settlement",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000010",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_stderr": "UserError(message='caller is not the settlement recipient')"
+    },
+    {
+      "fn": "withdraw_settlement",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000011",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "withdraw_settlement",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000012",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_stderr": "UserError(message='settlement already withdrawn')"
+    },
+    {
+      "fn": "file_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000013",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "respond_to_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000014",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "submit_evidence",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000015",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "freeze_evidence",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000016",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "adjudicate_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000017",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "finalize_claim",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000018",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_stderr": "UserError(message='application challenge window is still open')"
+    },
+    {
+      "fn": "file_challenge",
+      "tx": "0x0000000000000000000000000000000000000000000000000000000000000019",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "file_challenge",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000001a",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_stderr": "UserError(message='claim is not awaiting a possible challenge (no adjudication yet, or already past challenge)')"
+    },
+    {
+      "fn": "settle_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000001b",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_stderr": "UserError(message='claim is not final')"
+    },
+    {
+      "fn": "resolve_challenge",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000001c",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "finalize_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000001d",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "settle_claim",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000001e",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "SUCCESS",
+      "leader_stderr": ""
+    },
+    {
+      "fn": "withdraw_settlement",
+      "tx": "0x000000000000000000000000000000000000000000000000000000000000001f",
+      "status_name": "FINALIZED",
+      "votes": {
+        "0x0000000000000000000000000000000000000000": "agree",
+        "0x0000000000000000000000000000000000000001": "agree",
+        "0x0000000000000000000000000000000000000002": "agree",
+        "0x0000000000000000000000000000000000000003": "agree",
+        "0x0000000000000000000000000000000000000004": "agree"
+      },
+      "leader_execution_result": "ERROR",
+      "leader_stderr": "UserError(message='nothing to withdraw')"
+    }
+  ],
+  "A_final_decision": {
+    "adjudication_id": 0,
+    "capped": false,
+    "challenge_id": 0,
+    "claim_id": 1,
+    "claimable": 0,
+    "established_clause_ids": [],
+    "final_outcome": "ACCEPTED_NO_CONTEST",
+    "finalized_at": 1790234328,
+    "recipient": "0x939C6da178Ea1fDd1Da10C88dF0290Ae712502E4",
+    "remedy_amount": 1000000000000000,
+    "remedy_basis": "NO_CONTEST",
+    "remedy_kind": "FULL_REFUND",
+    "remedy_value": 0,
+    "settled_amount": 0,
+    "settled_at": 0,
+    "source": "NO_CONTEST",
+    "withdrawn_amount": 0,
+    "withdrawn_at": 0
+  },
+  "A_balances_holder_contract": {
+    "before": [
+      0,
+      0
+    ],
+    "after": [
+      0,
+      0
+    ]
+  },
+  "A_receipt": {
+    "challenge": {},
+    "claim": {
+      "evidence_frozen_at": 0,
+      "filed_at": 1790234328,
+      "manufacturer_response": "ACCEPT",
+      "responded_at": 1790234328,
+      "targeted_clause_ids": [
+        "C-001"
+      ]
+    },
+    "claim_id": 1,
+    "claim_status": "SETTLED",
+    "corrected_adjudication": {},
+    "evidence": [],
+    "final_decision": {
+      "adjudication_id": 0,
+      "capped": false,
+      "challenge_id": 0,
+      "claim_id": 1,
+      "claimable": 0,
+      "established_clause_ids": [],
+      "final_outcome": "ACCEPTED_NO_CONTEST",
+      "finalized_at": 1790234328,
+      "recipient": "0x939C6da178Ea1fDd1Da10C88dF0290Ae712502E4",
+      "remedy_amount": 1000000000000000,
+      "remedy_basis": "NO_CONTEST",
+      "remedy_kind": "FULL_REFUND",
+      "remedy_value": 0,
+      "settled_amount": 1000000000000000,
+      "settled_at": 1790234328,
+      "source": "NO_CONTEST",
+      "withdrawn_amount": 1000000000000000,
+      "withdrawn_at": 1790234328
+    },
+    "ineligible_evidence_count": 0,
+    "original_adjudication": {},
+    "warranty": {
+      "constitution_fingerprint": "aac12c88f6dc7c293db807f27a203acf92060c718cd07363e796444dd81d687a",
+      "constitution_id": 1,
+      "constitution_version": "2026.1",
+      "coverage_end": 1821770328,
+      "coverage_start": 1790234328,
+      "holder": "0x939C6da178Ea1fDd1Da10C88dF0290Ae712502E4",
+      "manufacturer": "0xc3F01A8283209E31edC678588539A368450ff0a9",
+      "max_deterministic_remedy": 1000000000000000,
+      "product_model_id": "WIDGET-X-001",
+      "warranty_id": 1
+    }
+  },
+  "B_challenge": {
+    "adjudication_id": 1,
+    "challenge_id": 1,
+    "challenger": "0x939C6da178Ea1fDd1Da10C88dF0290Ae712502E4",
+    "citation": {
+      "clause_ids": [],
+      "constitution_id": 0,
+      "evidence_ids": [],
+      "timestamp_field": "failure_asserted_at"
+    },
+    "claim_id": 2,
+    "corrected_adjudication_id": 0,
+    "explanation": "Please recheck the window.",
+    "filed_at": 1790234328,
+    "ground": "TEMPORAL_ERROR",
+    "remand_issue": "",
+    "resolution_path": "DETERMINISTIC",
+    "resolution_reason": "the coverage window was computed correctly from frozen timestamps",
+    "resolved_at": 1790234328,
+    "result": "UPHELD",
+    "status": "RESOLVED"
+  },
+  "B_receipt": {
+    "challenge": {
+      "adjudication_id": 1,
+      "challenge_id": 1,
+      "challenger": "0x939C6da178Ea1fDd1Da10C88dF0290Ae712502E4",
+      "citation": {
+        "clause_ids": [],
+        "constitution_id": 0,
+        "evidence_ids": [],
+        "timestamp_field": "failure_asserted_at"
+      },
+      "claim_id": 2,
+      "corrected_adjudication_id": 0,
+      "explanation": "Please recheck the window.",
+      "filed_at": 1790234328,
+      "ground": "TEMPORAL_ERROR",
+      "remand_issue": "",
+      "resolution_path": "DETERMINISTIC",
+      "resolution_reason": "the coverage window was computed correctly from frozen timestamps",
+      "resolved_at": 1790234328,
+      "result": "UPHELD",
+      "status": "RESOLVED"
+    },
+    "claim": {
+      "evidence_frozen_at": 1790234328,
+      "filed_at": 1790234328,
+      "manufacturer_response": "DISPUTE",
+      "responded_at": 1790234328,
+      "targeted_clause_ids": [
+        "C-001"
+      ]
+    },
+    "claim_id": 2,
+    "claim_status": "SETTLED",
+    "corrected_adjudication": {},
+    "evidence": [
+      {
+        "category": "RECEIPT",
+        "evidence_id": 1,
+        "fingerprint": "751090ca65e16e1231c5edec927fca856b2150711f243e19944f245510bb95b1",
+        "frozen_at": 1790234328,
+        "host": "example.org",
+        "retrieval_status": "AVAILABLE"
+      }
+    ],
+    "final_decision": {
+      "adjudication_id": 1,
+      "capped": false,
+      "challenge_id": 1,
+      "claim_id": 2,
+      "claimable": 0,
+      "established_clause_ids": [],
+      "final_outcome": "NOT_COVERED",
+      "finalized_at": 1790234328,
+      "recipient": "0x939C6da178Ea1fDd1Da10C88dF0290Ae712502E4",
+      "remedy_amount": 0,
+      "remedy_basis": "NON_PAYABLE",
+      "remedy_kind": "NONE",
+      "remedy_value": 0,
+      "settled_amount": 0,
+      "settled_at": 1790234328,
+      "source": "ADJUDICATION_AFTER_CHALLENGE",
+      "withdrawn_amount": 0,
+      "withdrawn_at": 0
+    },
+    "ineligible_evidence_count": 0,
+    "original_adjudication": {
+      "adjudicated_at": 1790234328,
+      "adjudication_id": 1,
+      "challenge_window_closes_at": 1790234388,
+      "claim_id": 2,
+      "constitution_id": 1,
+      "coverage_window": "FAIL",
+      "covered_clause_ids": [],
+      "decision_path": "DETERMINISTIC_PREDICATE",
+      "evidence_ids_considered": [
+        1
+      ],
+      "evidence_ids_relied_on": [],
+      "evidence_sufficiency": "INSUFFICIENT",
+      "exclusion_clause_ids": [],
+      "outcome": "NOT_COVERED",
+      "product_match": "UNCLEAR",
+      "rationale": "Decided deterministically from frozen protocol facts; no model was consulted.",
+      "source_authority": "UNCLEAR",
+      "superseded": false,
+      "warranty_version_match": "PASS"
+    },
+    "warranty": {
+      "constitution_fingerprint": "aac12c88f6dc7c293db807f27a203acf92060c718cd07363e796444dd81d687a",
+      "constitution_id": 1,
+      "constitution_version": "2026.1",
+      "coverage_end": 1821770328,
+      "coverage_start": 1790234328,
+      "holder": "0x939C6da178Ea1fDd1Da10C88dF0290Ae712502E4",
+      "manufacturer": "0xc3F01A8283209E31edC678588539A368450ff0a9",
+      "max_deterministic_remedy": 1000000000000000,
+      "product_model_id": "WIDGET-X-001",
+      "warranty_id": 2
+    }
+  },
+  "real_clock_note": "challenge window boundary checked against the real simulator clock only at coarse grain"
+}

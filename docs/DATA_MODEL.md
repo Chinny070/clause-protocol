@@ -304,3 +304,34 @@ is a Stage 1 decision, not frozen here.)
 > `challenge_window_closes_at`. The claim-to-adjudication link is a separate `adjudication_id_by_claim`
 > map, so the **Stage 2 `Claim` struct layout is unchanged**; `get_claim` now also returns
 > `adjudication_id` (0 = none). Claim status gains `DECIDED`.
+
+
+---
+
+## Stage 4 as-implemented: storage
+
+New storage (no Stage 1-3 struct changed; `Reservation.amount` semantics = remaining reserved, see
+`ECONOMIC_INVARIANTS.md`; `Adjudication.superseded` is flipped on REVERSED/REMAND correction):
+
+```
+Challenge      { challenge_id, claim_id, adjudication_id (the ORIGINAL), challenger, ground, explanation,
+                 citation_json (canonical), filed_at, status (OPEN|REMAND_PENDING|RESOLVED),
+                 result ("" | UPHELD | REVERSED | REMAND | INVALID_CHALLENGE),
+                 resolution_path ("" | DETERMINISTIC | SEMANTIC | REMAND_REVIEW | LAPSED), resolution_reason,
+                 remand_issue, corrected_adjudication_id (0 if none), resolved_at }
+FinalDecision  { claim_id, source (NO_CONTEST | ADJUDICATION | ADJUDICATION_AFTER_CHALLENGE | CHALLENGE_CORRECTED),
+                 adjudication_id (authoritative; 0 for NO_CONTEST), challenge_id, final_outcome,
+                 established_clause_ids_json, remedy_basis (NO_CONTEST | COVERED | POLICY_RULE_FOR_HOLDER |
+                 POLICY_BLOCK | NON_PAYABLE), remedy_kind, remedy_value, remedy_amount (deterministic, pre-capacity),
+                 recipient, finalized_at, settled_at, settled_amount, capped, claimable, withdrawn_at, withdrawn_amount }
+```
+Maps: `challenges`, `challenge_id_by_claim`, `next_challenge_id`, `final_by_claim`.
+Corrected adjudications reuse `Adjudication` with `decision_path` `CHALLENGE_CORRECTION` / `REMAND_CORRECTION`,
+`challenge_window_closes_at = 0` (never challengeable), `evidence_ids_considered` copied from the original.
+
+The Stage 0 `ResolutionReceipt` struct is not stored; it is a **read model**, `get_resolution_receipt(claim_id)`:
+warranty (id, holder, manufacturer, product model, coverage window, frozen max, constitution id/version/fingerprint),
+claim (targeted clauses, filed/response/freeze timestamps), evidence (ELIGIBLE records by id/category/host/status/
+fingerprint/frozen_at - never content; ineligible records counted only), original adjudication, challenge, corrected
+adjudication, final decision (outcome, remedy, timestamps, settlement, withdrawal). Other views: `get_challenge`,
+`get_challenge_for_claim`, `get_final_decision`.

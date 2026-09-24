@@ -88,3 +88,88 @@ calls, `total_balance - reserved_liability == available_balance` holds exactly, 
 GEN ever observed leaving the contract (settlements + manufacturer withdrawals) plus current
 `total_balance` equals the sum of all GEN ever deposited via `fund_pool`. This is the concrete form of
 "prove accounting conservation" from the build brief.
+
+
+---
+
+## Stage 4 as-implemented: reservation -> settlement -> claimable -> withdrawal
+
+### The accounting model actually implemented
+
+Stage 2 did not implement per-claim `pending_locks`; the frozen Stage 1 accounting is `total_balance`,
+`reserved_liability`, and one `Reservation` per warranty. Stage 4 keeps that model and adds no pool fields:
+
+- `Reservation.amount` now means **the amount currently still reserved** for that warranty (initially
+  `max_deterministic_remedy`, the warranty's frozen lifetime cap; the passport keeps the original).
+- **Settlement** of a payable claim moves `payable` out of the pool in one step:
+  `pool.total_balance -= payable`, `pool.reserved_liability -= payable`, `reservation.amount -= payable`,
+  `FinalDecision.claimable += payable`. If the reservation reaches 0 it becomes `CONSUMED`.
+- **Withdrawal** zeroes `claimable` and emits the transfer. Nothing else changes.
+
+Conservation, checked independently in tests at every step (the test keeps its own ledger of deposits and of every
+transfer captured off the VM):
+
+```
+deposited - emitted_transfers == sum(pool.total_balance) + sum(claimable outstanding)
+sum(pool.reserved_liability)  == sum(Reservation.amount for ACTIVE reservations)
+per warranty: Reservation.amount + sum(settled_amount of its claims) == max_deterministic_remedy   (ACTIVE|CONSUMED)
+per warranty: sum(settled_amount) <= max_deterministic_remedy
+per claim:    settled_amount <= remedy_amount;   withdrawn_amount <= settled_amount;   no value before settled_at
+pool:         total_balance >= reserved_liability   (available_balance >= 0, never clamped)
+```
+
+`available_balance = total_balance - reserved_liability` is unchanged, and claimable funds are outside `total_balance`,
+so `withdraw_pool` can never touch a holder's claimable amount (tested).
+
+### Deterministic remedy (`_select_remedy`, plain Python, no model, no pool data)
+
+Payable only for: `ACCEPTED_NO_CONTEST`; `COVERED`; and an evidence-gap outcome whose FROZEN policy is
+`RULE_FOR_HOLDER` (`INSUFFICIENT_EVIDENCE` <- `insufficient_evidence_behavior`, `EVIDENCE_UNAVAILABLE` <-
+`unavailable_evidence_behavior`). `NOT_COVERED` and `INVALID_CLAIM` pay zero regardless of table contents. `BLOCK` and
+`RULE_FOR_MANUFACTURER` pay zero (`remedy_basis` = `POLICY_BLOCK` / `NON_PAYABLE`).
+
+Row lookup: for each established clause (covered clause ids for `COVERED`; the claim's targeted clauses for
+`RULE_FOR_HOLDER`), use the `(COVERED, clause_id)` row, else the outcome-level `(COVERED, "")` row; `ACCEPTED_NO_CONTEST`
+uses `(ACCEPTED_NO_CONTEST, "")`. Several established clauses -> the **highest single row**, never a sum. **No matching
+row on a payable outcome fails closed** (`finalize_claim` reverts; nothing stored).
+
+Arithmetic (`_remedy_amount`): `FULL_REFUND` = the warranty's frozen max (`remedy_value` ignored);
+`PARTIAL_BPS` = `floor(max * bps / 10000)`; `REPAIR_CREDIT` = `min(remedy_value, max)`; `NONE` = 0. The result never
+exceeds the frozen max; no later rule increases it (`FinalDecision.remedy_amount` is immutable).
+
+### Warranty capacity is a lifetime cap (overlapping claims)
+
+A warranty may have several claims (a decision does NOT block later claims; only claims still in the response/dispute
+phase do). Each claim's `remedy_amount` is computed independently and deterministically at finalize. At **settlement** the
+payable is `min(remedy_amount, Reservation.amount)`: the first claims settled consume the frozen maximum; later ones are
+capped (`FinalDecision.capped = true`, possibly to 0). Total paid on a warranty can therefore never exceed
+`max_deterministic_remedy`, whatever the number of claims or their order. Order-of-settlement dependence is a documented,
+deterministic consequence of "first settled, first served", not a race a party can widen.
+
+### Reservation release
+
+A partially used reservation keeps the unused remainder reserved for the rest of the warranty's life (further claims may
+still be valid). It is released by the existing permissionless `release_expired_reservation`, which Stage 4 tightens
+(both tightenings implement what `ECONOMIC_INVARIANTS.md` Stage 0 already required, "cannot run while any Claim ... is
+still open", and protect the claim-deadline grace window that `file_claim` already grants):
+
+1. every claim on the warranty must be `SETTLED` (also required by `cancel_warranty`);
+2. an EXPIRED warranty may be released only after `now > coverage_end + claim_deadline_s` (a holder may still file during
+   the grace window, so its capacity must stay reserved). A CANCELLED warranty may be released immediately (it can no
+   longer be claimed).
+
+A release never touches value already moved to `claimable`.
+
+### One-shot guards (double-spend / double-settlement)
+
+`finalize_claim` (one `FinalDecision` per claim), `settle_claim` (`settled_at` set first, status `FINAL -> SETTLED`),
+`withdraw_settlement` (`withdrawn_at` and `claimable = 0` written **before** the transfer is emitted, so a repeated or
+re-entrant call finds nothing to take), `file_challenge` (one per claim), `execute_remand` (challenge leaves
+`REMAND_PENDING`), `_release_reservation` (requires `ACTIVE`).
+
+### Pull payment
+
+`settle_claim` only authorizes: it creates `claimable` for the recorded recipient (the warranty holder at finalize). The
+recipient calls `withdraw_settlement`. No semantic code path transfers value; the model never sees or chooses an amount,
+percentage, recipient, or pool figure. A failed transfer after the guard is set is a stuck-fund incident to be handled
+manually, not an invitation to unset the guard (unchanged Stage 0 policy).

@@ -159,3 +159,29 @@ addresses it (cross-referenced, not restated in full — see the linked doc for 
 - **Evidence cap** (Stage 3.5): `submit_evidence` rejects an eligible record once the claim already has 10, counted over all prior submissions/parties/transactions before freeze; adjudication shows every adjudicable record and asserts the cap as an invariant. No silent truncation.
 - **Residual gaps** (unchanged protocol gates): undetermined-consensus rollback, real render, real model
   behaviour.
+
+
+---
+
+## Stage 4 additions (challenge, finality, settlement)
+
+- **Unauthorized / duplicate / late challenge**: holder-or-manufacturer only; one per claim; protocol-timestamp window
+  with exact-boundary tests; reverts consume nothing.
+- **Challenge as a re-litigation vehicle**: ground+citation must match, citations must be frozen evidence/clauses of THIS
+  claim; four grounds are fully deterministic or deterministically gated; semantic review may only correct fields the
+  ground allows, must concern the cited item, and only a *material* change reverses.
+- **New-evidence injection**: no URL fields, no submission after freeze, resolution never browses (test-enforced).
+- **Hostile challenge explanation / evidence**: JSON data slot, no section forgery, injected `outcome`/payout corrections
+  rejected; the model never emits a result, an outcome, an amount, or a recipient.
+- **Malformed / disagreeing semantic output**: strict checker, re-applied by every validator; no partial writes.
+  *Residual, unprovable locally:* real-model behaviour and real disagreement rollback (StudioNet gates).
+- **Challenge stalling**: `lapse_challenge` after one further frozen window; original stands.
+- **Payout tampering**: remedy comes only from the frozen table via `_select_remedy`; capped by the warranty's frozen max
+  and remaining reservation; missing row fails closed.
+- **Double finalize / settle / withdraw / release / challenge**: one-shot guards, tested, including a seeded randomized
+  adversarial driver reconciled against an independent ledger.
+- **Reservation starvation**: release blocked while any claim is unsettled and until the claim-deadline grace has passed
+  (a manufacturer can no longer release a warranty's capacity at `coverage_end` to defeat a grace-window claim).
+- **Wrong recipient / premature withdrawal**: recorded recipient only; requires `SETTLED`; state written before transfer.
+- **Protocol vs application finality confusion**: separate transactions, documented operator verification list, transfer
+  emission timing carried as a StudioNet gate.

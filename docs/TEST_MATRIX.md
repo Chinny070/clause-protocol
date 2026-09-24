@@ -160,3 +160,48 @@ isolation test fail). Real simulator: `tests/integration/test_real_adjudication.
 invocation via `scripts/run_real_web.sh`): deterministic paths for real; the semantic path fails closed
 with no model. **Not executed anywhere: any real model call, real leader/validator semantic consensus,
 real disagreement rollback.**
+
+
+---
+
+## Stage 4 status: challenge, finality, deterministic remedy, settlement, withdrawal (model MOCKED; no live model)
+
+New direct-mode files (207 tests): `test_stage4_challenge.py` (118), `test_stage4_pure_logic.py` (45),
+`test_stage4_lifecycle.py` (22), `test_stage4_economics.py` (22); shared fixtures in `helpers4.py`.
+Real simulator: `tests/integration/test_real_settlement.py` (separate invocation via `scripts/run_real_web.sh`;
+deterministic paths only).
+
+| Area (brief §) | Where covered |
+|---|---|
+| Unauthorized challenger, both sides independently (§3, §19) | `test_each_party_can_challenge_independently[holder/manufacturer]`, `test_unrelated_account_cannot_challenge` |
+| Window: before opening / at opening / during / exact close / after (§4) | `test_window_boundaries_exact`, `test_before_opening_no_adjudication_exists`, `test_window_length_comes_from_the_frozen_constitution`, `test_challenge_after_window_but_before_finalize_rejected` |
+| Duplicate challenge, one round (§2, §17) | `test_only_one_application_challenge_per_claim`; no second challenge after remand |
+| Malformed/unknown ground; citation shape/kind (§5, §19) | `test_unknown_or_malformed_ground_rejected`, `test_citation_must_match_the_ground`, `test_malformed_citation_shapes_rejected` |
+| Nonexistent / another claim's evidence; new-evidence injection (§19) | `test_citing_nonexistent_evidence_or_clause_rejected`, `test_citing_another_claims_evidence_rejected`, `test_challenge_cannot_introduce_new_evidence` |
+| Prompt injection in explanation; change payout/constitution (§19) | `test_challenge_explanation_prompt_injection_cannot_steer_the_result`, `test_challenge_cannot_change_payout_or_constitution` |
+| Deterministic vs semantic grounds (§7) | `test_stage4_pure_logic.py` (precheck table), `test_*_deterministic*` in challenge file |
+| Malformed semantic output (33 shapes), provider failure, no partial state (§9, §19) | `test_malformed_challenge_output_fails_closed_with_no_partial_state`, `test_provider_failure_fails_closed`, `test_remand_output_is_validated_by_the_stage3_checker` |
+| Validator agreement/disagreement, tampered leader, leader error, closure isolation (§19) | `test_validator_*`, `test_two_claims_in_one_contract_do_not_share_review_state` |
+| Remand narrow, once, final, no cycle (§10) | `test_E_remand_runs_one_bounded_correction_and_is_final`, `test_remand_resolution_period_also_lapses` |
+| Challenge liveness | `test_lapse_*`, `test_a_persistently_failing_model_cannot_freeze_the_claim_forever` |
+| Challenge after settlement; settlement while unresolved (§19) | `test_challenge_after_settlement_rejected`, `test_settlement_and_finalization_blocked_while_challenge_unresolved` |
+| Lifecycles A-G (§21) | `test_stage4_lifecycle.py` (A no-contest, B covered/no-challenge, C not covered, D upheld, E reversed/remand, F invalid, G evidence gaps x 3 frozen policies) |
+| Resolution Receipt (§18) | `test_resolution_receipt_reconstructs_the_whole_history`, `test_receipt_for_a_bare_claim_is_bounded_and_safe` |
+| Remedy selection/arithmetic, cap, fail-closed (§13) | `test_stage4_pure_logic.py` (grid over kinds/values/maxima; row fallback; highest-not-sum; missing row) + `test_claim_that_fails_finalization_is_not_settleable` |
+| Conservation with an independent ledger (§15, §20) | `Ledger.check` after every step in `test_stage4_economics.py` |
+| No overpayment, overlapping claims, multiple warranties, partial, zero-payable (§17, §20) | `test_overlapping_claims_*`, `test_two_claims_partial_then_full`, `test_capacity_split_partial_first`, `test_multiple_warranties_are_isolated_*`, `test_no_payout_lifecycle_moves_no_value` |
+| Reservation release, grace, unsettled claims (§15) | `test_reservation_cannot_be_released_or_cancelled_under_an_unsettled_claim`, `test_unused_reservation_is_released_only_after_grace_and_only_once`, `test_expiry_release_waits_for_the_claim_deadline_grace` |
+| Withdrawal: recipient/wrong/exact/zero/double/before final/before settle/replay (§16) | `test_withdrawal_*`, `test_only_the_recorded_recipient_can_withdraw`, `test_zero_claim_withdrawal_*`, `test_state_written_before_transfer_*` |
+| Seeded randomized adversarial driver, 6 seeds, 140 random operations each + drain, ledger checked every step (§20) | `test_random_operation_sequences_preserve_every_invariant` (asserts the run really settled and paid) |
+
+Existing tests changed (not weakened): `test_pool_accounting.py` x3, `test_timestamp_trust_boundary.py` x1 and
+`test_constitution_hardening.py` x1 now warp past the 30-day claim-deadline grace before calling
+`release_expired_reservation`, because Stage 4 forbids releasing an expired warranty's capacity inside the grace window
+(a Stage 1 economic hole: any party could release capacity at `coverage_end` and defeat a grace-window claim). The
+hardening test's write-method inventory and sequence were extended with the seven new write methods.
+
+Mutation checks (temporary, reverted): removing the settlement capacity cap, the unsettled-claim release guard, the
+window `<=` boundary, or the recipient check each makes the corresponding tests fail.
+
+**Not executed anywhere:** any real model call for challenge review or remand, real leader/validator disagreement
+rollback, genuine transfer emission/finality timing, real render, genuine payable behaviour without the shim.
