@@ -265,6 +265,9 @@ describe("static release guards (production build hygiene)", () => {
   it("no hard-coded contract/EOA address literal anywhere in src (no invented production address)", () => {
     for (const [f, t] of text) expect(t.match(/0x[0-9a-fA-F]{40}\b/g) ?? [], f).toEqual([]);
   });
+  it("shipped wording never says an issued warranty is manufacturer-revocable", () => {
+    for (const [f, t] of text) expect(t, f).not.toMatch(/not irrevocable|unilateral|manufacturer or the holder cancel|manufacturer or holder cancel/i);
+  });
   it("never handles private keys or mnemonics", () => {
     for (const [f, t] of text) {
       expect(t, f).not.toMatch(/privateKey|private_key|mnemonic|generatePrivateKey|createAccount\(|eth_sign\b|personal_sign/i);

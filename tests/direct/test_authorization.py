@@ -91,7 +91,8 @@ def test_holder_can_cancel_own_warranty(direct_deploy, direct_vm, direct_account
     assert contract.get_passport(warranty_id)["status"] == "CANCELLED"
 
 
-def test_manufacturer_can_cancel_warranty(direct_deploy, direct_vm, direct_accounts):
+def test_manufacturer_can_NOT_cancel_an_issued_warranty(direct_deploy, direct_vm, direct_accounts):
+    """V1 policy (Stage 6A.1): issuance is a commitment; only the holder may cancel."""
     manufacturer, holder = direct_accounts[0], direct_accounts[1]
     direct_vm.sender = manufacturer
     contract = direct_deploy(CONTRACT_PATH)
@@ -101,8 +102,9 @@ def test_manufacturer_can_cancel_warranty(direct_deploy, direct_vm, direct_accou
     warranty_id = issue(contract, direct_vm, program_id, constitution_id, manufacturer, holder)
 
     direct_vm.sender = manufacturer
-    contract.cancel_warranty(warranty_id)
-    assert contract.get_passport(warranty_id)["status"] == "CANCELLED"
+    with pytest.raises(Exception, match="only the holder can cancel"):
+        contract.cancel_warranty(warranty_id)
+    assert contract.get_passport(warranty_id)["status"] == "ACTIVE"
 
 
 def test_unauthorized_pool_funding_ownership_is_irrelevant(direct_deploy, direct_vm, direct_accounts):

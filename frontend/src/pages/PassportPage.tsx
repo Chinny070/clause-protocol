@@ -17,10 +17,9 @@ function Body({ reader, id }: { reader: ClauseReader; id: number }) {
   const q = useAsync(() => loadPassportBundle(reader, id), [reader, id]);
   const b = q.data;
   const isHolder = !!b && sameAddress(wallet.address, b.passport.holder);
-  const isMfr = !!b && sameAddress(wallet.address, b.passport.manufacturer);
   const unsettled = b ? b.claims.filter((c) => c.status !== "SETTLED") : [];
   const now = protocolNow();
-  const canCancel = !!b && b.passport.status === "ACTIVE" && unsettled.length === 0 && (isHolder || isMfr);
+  const canCancel = !!b && b.passport.status === "ACTIVE" && unsettled.length === 0 && isHolder;
   const graceEnd = b && b.constitution ? b.passport.coverageEnd + b.constitution.claimDeadlineS : 0;
   const canFile = !!b && b.passport.status !== "CANCELLED" && now >= b.passport.coverageStart && (graceEnd === 0 || now <= graceEnd);
   const canRelease = !!b && b.reservation?.status === "ACTIVE" && (b.passport.status === "CANCELLED" || (b.passport.status === "EXPIRED" && now > graceEnd)) && unsettled.length === 0;
@@ -31,10 +30,10 @@ function Body({ reader, id }: { reader: ClauseReader; id: number }) {
         <div className="stack">
           <PassportCard passport={b.passport} program={b.program} constitution={b.constitution} claimCount={b.claims.length} reservation={b.reservation} link={false} animate />
           {b.passport.status === "ACTIVE" ? (
-            <p className="banner" role="note"><strong>Not irrevocable.</strong> V1 lets the manufacturer or the holder cancel this warranty at any time while no claim is unsettled. A cancelled warranty stops covering new claims and releases its reserved capacity. Cancellation status is always shown on this passport.</p>
+            <p className="banner ok" role="note"><strong>ISSUED WARRANTY — TERMS FROZEN.</strong> Issuance created this commitment: the manufacturer cannot cancel, shorten or rewrite it. Retiring or pausing the manufacturer&apos;s program stops <em>future</em> issuance only; this warranty stays governed by its frozen terms. Only the holder can cancel their own passport (while no claim is unsettled).</p>
           ) : null}
           {b.passport.status === "CANCELLED" ? (
-            <p className="banner bad" role="status"><strong>This warranty was cancelled.</strong> {b.reservation?.releasedAt ? <>Its capacity was released at {formatUtc(b.reservation.releasedAt)} (protocol time).</> : null} It no longer covers new claims.</p>
+            <p className="banner bad" role="status"><strong>This warranty was cancelled by its holder.</strong> {b.reservation?.releasedAt ? <>Its capacity was released at {formatUtc(b.reservation.releasedAt)} (protocol time).</> : null} It no longer covers new claims.</p>
           ) : null}
           {b.constitution ? <FrozenTerms constitution={b.constitution} clauses={b.clauses} /> : null}
           {b.pool && b.program ? (
@@ -52,9 +51,9 @@ function Body({ reader, id }: { reader: ClauseReader; id: number }) {
             )}
             <div className="row noprint">
               {canFile ? <Link className="btn" to={`/passport/${b.passport.warrantyId}/claim`}>{isHolder ? "File a claim" : "File a claim (holder only)"}</Link> : <Badge tone="neutral" glyph="◌">Claims can no longer be filed</Badge>}
-              {b.passport.status === "ACTIVE" ? <TxButton spec={calls.cancelWarranty(id)} variant="warn" onDone={q.reload} reread={() => loadPassportBundle(reader, id)}
-                description="Cancels this warranty for good and releases its reserved capacity. This cannot be undone."
-                disabledReason={!wallet.ready ? "Connect a wallet." : !canCancel ? (unsettled.length > 0 ? "A claim on this warranty is unsettled." : "Only this warranty's holder or manufacturer can cancel.") : null} /> : null}
+              {b.passport.status === "ACTIVE" && isHolder ? <TxButton spec={calls.cancelWarranty(id)} variant="warn" onDone={q.reload} reread={() => loadPassportBundle(reader, id)}
+                description="Cancels your own warranty for good and releases its reserved capacity back to the manufacturer's pool. This cannot be undone."
+                disabledReason={!wallet.ready ? "Connect a wallet." : !canCancel ? (unsettled.length > 0 ? "A claim on this warranty is unsettled." : "This warranty can no longer be cancelled.") : null} /> : null}
               {canRelease ? <TxButton spec={calls.releaseExpiredReservation(id)} variant="secondary" onDone={q.reload} reread={() => loadPassportBundle(reader, id)} description="Releases the remaining reserved capacity of this ended warranty back to the pool." /> : null}
             </div>
           </section>

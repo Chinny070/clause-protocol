@@ -1576,11 +1576,9 @@ class ClauseProtocol(gl.Contract):
     def cancel_warranty(self, warranty_id: u32) -> None:
         passport = self.passports.get(warranty_id)
         _require(passport is not None, "unknown warranty")
-        caller = _sender()
-        _require(
-            caller.as_bytes == passport.holder.as_bytes or caller.as_bytes == passport.manufacturer.as_bytes,
-            "caller is neither the holder nor the manufacturer of this warranty",
-        )
+        # V1 policy: issuance creates the warranty commitment. The manufacturer can NOT cancel an issued
+        # warranty (pausing/retiring a program only stops FUTURE issuance); only the holder may cancel theirs.
+        _require(_sender().as_bytes == passport.holder.as_bytes, "caller is not this warranty's holder: only the holder can cancel an issued warranty")
         _require(self._effective_status(passport) == PASSPORT_ACTIVE, "warranty is not ACTIVE")
         self._require_no_unsettled_claims(warranty_id)
 

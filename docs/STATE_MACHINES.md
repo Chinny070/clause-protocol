@@ -22,7 +22,7 @@ never requires a dedicated "expire" transaction that could be forgotten) and `AC
   `registered_at`. Financial effect: reserves but does not move GEN — GEN was already deposited via
   `fund_pool`. Failure: reverts on insufficient available balance, inactive Program, or Constitution
   belonging to a different Program. Terminal: none, this is the entry transition.
-- **cancel_warranty** — caller: holder or manufacturer per Constitution rule. Preconditions: no open
+- **cancel_warranty** — caller: the warranty's holder ONLY (V1 policy: the manufacturer cannot cancel an issued warranty; pause/retire of a Program stops future issuance only). Preconditions: no unsettled
   Claim referencing this warranty. State: Passport -> CANCELLED, Reservation -> RELEASED, pool
   `reserved_liability -= amount`. Terminal.
 

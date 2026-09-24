@@ -153,7 +153,7 @@ still be valid). It is released by the existing permissionless `release_expired_
 (both tightenings implement what `ECONOMIC_INVARIANTS.md` Stage 0 already required, "cannot run while any Claim ... is
 still open", and protect the claim-deadline grace window that `file_claim` already grants):
 
-1. every claim on the warranty must be `SETTLED` (also required by `cancel_warranty`);
+1. every claim on the warranty must be `SETTLED` (also required by `cancel_warranty`, which only the warranty's holder may call; the manufacturer cannot cancel an issued warranty and pause/retire never touch existing reservations);
 2. an EXPIRED warranty may be released only after `now > coverage_end + claim_deadline_s` (a holder may still file during
    the grace window, so its capacity must stay reserved). A CANCELLED warranty may be released immediately (it can no
    longer be claimed).

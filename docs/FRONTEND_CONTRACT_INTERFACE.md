@@ -27,7 +27,7 @@ Contract: `ClauseProtocol` (`contracts/clause_protocol.py`), single Intelligent 
 | `create_program` | anyone (becomes the program's manufacturer) |
 | `pause_program`, `resume_program`, `retire_program`, `create_constitution`, `withdraw_pool`, `issue_warranty` | the program's manufacturer |
 | `fund_pool` (**payable**) | anyone (value must be > 0) |
-| `cancel_warranty` | the warranty's holder or manufacturer |
+| `cancel_warranty` | the warranty's **holder only** (the manufacturer can NOT cancel an issued warranty) |
 | `release_expired_reservation` | anyone |
 | `file_claim` | the warranty's holder |
 | `respond_to_claim` | the claim's manufacturer |
@@ -98,7 +98,7 @@ messages per write method. Semantic-step failures (`adjudicate_claim`, `freeze_e
 - **Challenge `corrections` representation** (Stage 4 deviation, audited and retained in Stage 4.5): see `STAGE_4_5_CONTRACT_FREEZE.md`.
 - One Application Challenge per claim; one remand step; corrections are final and never challengeable.
 - The warranty's `max_deterministic_remedy` is a lifetime cap across all its claims; settlement order decides who is capped.
-- A manufacturer may cancel a warranty unilaterally while no claim is unsettled (documented V1 limitation).
+- **ISSUED WARRANTY — TERMS FROZEN.** A manufacturer cannot cancel, shorten or rewrite an issued warranty; `pause_program`/`retire_program` stop future issuance only. Only the holder may cancel their own warranty, and only while no claim on it is unsettled.
 
 ## 10. Public read models Stage 5 should use
 
@@ -197,7 +197,7 @@ Method counts: **40 public methods = 18 view + 22 write** (1 payable: `fund_pool
   - `unknown pool for reservation`
   - `accounting invariant violated`
   - `unknown warranty`
-  - `caller is neither the holder nor the manufacturer of this warranty`
+  - `caller is not this warranty's holder: only the holder can cancel an issued warranty`
   - `warranty is not ACTIVE`
 
 #### `release_expired_reservation(warranty_id: u32) -> None`

@@ -163,7 +163,7 @@ def release(env, direct_vm, who=None):
 
 
 def cancel(env, direct_vm):
-    direct_vm.sender = env["manufacturer"]
+    direct_vm.sender = env["holder"]  # V1 policy: only the holder can cancel an issued warranty
     env["contract"].cancel_warranty(env["warranty_id"])
 
 

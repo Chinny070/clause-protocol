@@ -248,7 +248,7 @@ def test_reservation_cannot_be_released_or_cancelled_under_an_unsettled_claim(di
     c = env["contract"]
     from helpers import respond
     respond(c, direct_vm, env["claim_id"], env["manufacturer"], "ACCEPT")
-    direct_vm.sender = env["manufacturer"]
+    direct_vm.sender = env["holder"]
     with pytest.raises(Exception, match="unsettled claim"):
         c.cancel_warranty(env["warranty_id"])
     warp_to(direct_vm, env["now"] + 1000 + 30 * ONE_DAY + 1)  # past coverage_end + claim deadline grace
@@ -508,7 +508,7 @@ def test_random_operation_sequences_preserve_every_invariant(direct_deploy, dire
                 direct_vm.sender = direct_accounts[3]
                 attempt(lambda: c.release_expired_reservation(ce["warranty_id"]))
             else:
-                direct_vm.sender = manufacturer
+                direct_vm.sender = ce["holder"]
                 attempt(lambda: c.cancel_warranty(ce["warranty_id"]))
         elif roll < 0.76:
             amt = rng.choice([1, ONE_GEN, 3 * ONE_GEN, 50 * ONE_GEN])

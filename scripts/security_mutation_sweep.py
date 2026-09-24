@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "contracts" / "clause_protocol.py"
-AUDITED = "07d7e4bfdbaeeba2d30129c00034cd728681ed99877286a16189005fbe7d847e"
+AUDITED = "2cae6e200ee82b747ebe89bf3e423768fca545ada840348a8f104d9053c07851"
 
 MUTATIONS = [
     ("authorization: only the holder may file a claim", 'passport.holder.as_bytes, "caller is not this warranty\'s holder")', 'passport.holder.as_bytes or True, "x")', ["tests/direct/test_stage2_claims.py"]),
@@ -33,6 +33,7 @@ MUTATIONS = [
     ("reservation release waits for the claim-deadline grace", '_now() > int(passport.coverage_end) + int(governing.claim_deadline_s),', 'True,', ["tests/direct/test_stage45_freeze.py"]),
     ("reservation release blocked by unsettled claims", '_require(self.claims[u32(raw)].status == CLAIM_SETTLED, "warranty has an unsettled claim")', 'pass', ["tests/direct/test_stage45_freeze.py"]),
     ("no finalize while the challenge window is open", '_require(now > auth.challenge_window_closes_at, "application challenge window is still open")', 'pass', ["tests/direct/test_stage4_lifecycle.py"]),
+    ("cancellation: only the holder may cancel an issued warranty", '_require(_sender().as_bytes == passport.holder.as_bytes, "caller is not this warranty\'s holder: only the holder can cancel an issued warranty")', 'pass', ["tests/direct/test_stage6a1_cancellation.py", "tests/direct/test_authorization.py"]),
 ]
 
 

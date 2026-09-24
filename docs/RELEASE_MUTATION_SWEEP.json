@@ -1,5 +1,5 @@
 {
-  "audited_sha256": "07d7e4bfdbaeeba2d30129c00034cd728681ed99877286a16189005fbe7d847e",
+  "audited_sha256": "2cae6e200ee82b747ebe89bf3e423768fca545ada840348a8f104d9053c07851",
   "results": [
     {
       "guard": "authorization: only the holder may file a claim",
@@ -127,6 +127,14 @@
       "guard": "no finalize while the challenge window is open",
       "tests": [
         "tests/direct/test_stage4_lifecycle.py"
+      ],
+      "result": "KILLED"
+    },
+    {
+      "guard": "cancellation: only the holder may cancel an issued warranty",
+      "tests": [
+        "tests/direct/test_stage6a1_cancellation.py",
+        "tests/direct/test_authorization.py"
       ],
       "result": "KILLED"
     }

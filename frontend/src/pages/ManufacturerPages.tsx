@@ -121,9 +121,10 @@ function Console({ reader, id }: { reader: ClauseReader; id: number }) {
           </section>
           {isMfr && d.program.status !== "RETIRED" ? (
             <section className="plate" aria-labelledby="ps-h"><h2 id="ps-h">Program status</h2>
+              <p className="hint">Retiring a program stops future issuance. Existing warranties remain governed by their frozen terms.</p>
               <div className="row">
-                {d.program.status === "ACTIVE" ? <TxButton variant="secondary" spec={calls.pauseProgram(id)} reread={() => reader.getProgram(id)} onDone={q.reload} description="Pauses new warranty issuance. Existing warranties and claims continue." /> : <TxButton variant="secondary" spec={calls.resumeProgram(id)} reread={() => reader.getProgram(id)} onDone={q.reload} description="Resumes warranty issuance." />}
-                <TxButton variant="warn" spec={calls.retireProgram(id)} reread={() => reader.getProgram(id)} onDone={q.reload} description="Retires this program permanently: no new terms or warranties. Existing warranties and claims continue." />
+                {d.program.status === "ACTIVE" ? <TxButton variant="secondary" spec={calls.pauseProgram(id)} reread={() => reader.getProgram(id)} onDone={q.reload} description="Pauses NEW warranty issuance only. Existing warranties remain governed by their frozen terms; claims continue." /> : <TxButton variant="secondary" spec={calls.resumeProgram(id)} reread={() => reader.getProgram(id)} onDone={q.reload} description="Resumes warranty issuance." />}
+                <TxButton variant="warn" spec={calls.retireProgram(id)} reread={() => reader.getProgram(id)} onDone={q.reload} description="Retires this program permanently: no new terms or warranties. Existing warranties remain governed by their frozen terms; claims continue." />
               </div></section>
           ) : null}
         </div>
@@ -149,7 +150,7 @@ const initialDraft = (): Draft => ({
   covered: [{ clause_id: "C-001", text: "" }], excluded: [], categories: ["RECEIPT"], sourcePolicy: "",
   claimDeadlineDays: 30, responseDays: 14, challengeWindowDays: 7, challengeEnabled: true,
   insufficientBehavior: "RULE_FOR_MANUFACTURER", unavailableBehavior: "RULE_FOR_MANUFACTURER",
-  expiryRules: "Holder or manufacturer may cancel while no claim is unsettled.",
+  expiryRules: "The holder may cancel their own warranty while no claim is unsettled. The manufacturer cannot cancel an issued warranty.",
   remedy: [
     { outcome: "COVERED", clause_id: "", remedy_kind: "FULL_REFUND", remedy_value: 0n },
     { outcome: "NOT_COVERED", clause_id: "", remedy_kind: "NONE", remedy_value: 0n },
@@ -241,7 +242,7 @@ function TermsWizard({ reader, programId }: { reader: ClauseReader; programId: n
             <div className="field"><label htmlFor="ue">If evidence is unavailable</label><select id="ue" value={d.unavailableBehavior} onChange={(e) => set("unavailableBehavior", e.target.value)}><option value="RULE_FOR_MANUFACTURER">Rule for the manufacturer (no payment)</option><option value="RULE_FOR_HOLDER">Rule for the holder (pay as covered)</option><option value="BLOCK">Block (no payment)</option></select></div>
           </div>
           <div className="field"><label htmlFor="er">Expiry / cancellation rules (text)</label><input id="er" value={d.expiryRules} onChange={(e) => set("expiryRules", e.target.value)} />
-            <p className="hint">V1 note: the contract lets the manufacturer or holder cancel a warranty while no claim is unsettled, whatever this text says. Holders see cancellation status on every passport.</p></div></section>
+            <p className="hint">V1: once issued, a warranty is a commitment. The manufacturer cannot cancel it; only the holder can cancel their own. Retiring or pausing a program stops future issuance only.</p></div></section>
         <section className="plate"><h2>5 · Precommitted remedy table</h2>
           <p className="hint">Only COVERED and ACCEPTED_NO_CONTEST (and evidence gaps set to “rule for the holder”) can pay. The remedy comes from this table by plain code: FULL_REFUND pays the warranty maximum; PARTIAL_BPS is basis points of it; REPAIR_CREDIT is an amount capped at it.</p>
           {d.remedy.map((r, i) => (

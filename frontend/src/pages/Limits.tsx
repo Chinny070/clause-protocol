@@ -19,8 +19,8 @@ export function Limits() {
           <li>The remedy always comes from the precommitted table by plain code. Validators and models never choose an amount, a percentage or a recipient.</li>
           <li>Settlement authorizes a claimable amount; the holder then withdraws it (pull payment). Reserved capacity cannot be withdrawn by the manufacturer.</li>
         </ul></section>
-      <section className="plate" aria-labelledby="l3"><h2 id="l3">Cancellation</h2>
-        <p className="banner bad"><strong>Warranties are not irrevocable in V1.</strong> The manufacturer (or the holder) can cancel a warranty at any time while no claim on it is unsettled. A cancelled warranty stops covering new claims and its reserved capacity is released. Cancellation is always shown on the passport. This is flagged for release review.</p></section>
+      <section className="plate" aria-labelledby="l3"><h2 id="l3">Issued warranties are commitments</h2>
+        <p className="banner ok"><strong>ISSUED WARRANTY — TERMS FROZEN.</strong> The manufacturer cannot cancel, shorten or rewrite a warranty once it is issued. Pausing or retiring a program stops future issuance only: existing warranties remain governed by their frozen terms and their reserved capacity stays protected. Only the holder can cancel their own warranty (while no claim on it is unsettled).</p></section>
       <section className="plate" aria-labelledby="l4"><h2 id="l4">Challenges and finality</h2>
         <ul>
           <li><strong>Application Challenge</strong> is CLAUSE&apos;s own mechanism: one per claim, bounded grounds, only frozen evidence. It is not a GenLayer Protocol Appeal.</li>

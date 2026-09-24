@@ -62,7 +62,7 @@ describe("public warranty explorer + passport", () => {
     expect(card).toHaveTextContent(FP);
     expect(within(card).getByText("Frozen")).toBeInTheDocument();
   });
-  it("passport page: FROZEN TERMS, fingerprint, clauses, exclusions, remedy table, capacity, not-irrevocable notice", async () => {
+  it("passport page: FROZEN TERMS, fingerprint, clauses, exclusions, remedy table, capacity, issued-warranty commitment notice", async () => {
     const { reads } = makeState();
     renderApp({ transport: makeTransport({ reads }), path: "/passport/1" });
     expect(await screen.findByLabelText("Warranty passport 1")).toBeInTheDocument();
@@ -74,14 +74,16 @@ describe("public warranty explorer + passport", () => {
     expect(screen.getByText(/Precommitted remedy table/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Full refund \(warranty maximum\)/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/5 GEN/, { selector: "dd" }).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Not irrevocable/)).toBeInTheDocument();
+    expect(screen.getByText(/ISSUED WARRANTY — TERMS FROZEN/)).toBeInTheDocument();
+    expect(screen.getByText(/the manufacturer cannot cancel, shorten or rewrite it/i)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/not irrevocable|manufacturer or the holder cancel/i);
     expect(screen.getByText(/Warranty capacity/i)).toBeInTheDocument();
   });
   it("cancellation status and history are surfaced on a cancelled passport", async () => {
     const st = makeState();
     st.s.passportStatus = "CANCELLED";
     renderApp({ transport: makeTransport({ reads: st.reads }), path: "/passport/1" });
-    expect(await screen.findByText(/This warranty was cancelled/)).toBeInTheDocument();
+    expect(await screen.findByText(/This warranty was cancelled by its holder/)).toBeInTheDocument();
     expect(screen.getByText(/capacity was released at/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Cancelled/i).length).toBeGreaterThan(0);
   });
@@ -199,13 +201,14 @@ describe("Resolution Receipt (public, no wallet)", () => {
 });
 
 describe("V1 limitations are discoverable", () => {
-  it("documents the 10-record cap, first-come slots, capacity, unavailable evidence and unilateral cancellation", () => {
+  it("documents the 10-record cap, first-come slots, capacity, unavailable evidence, and that issued warranties are commitments", () => {
     renderApp({ config: CONFIGURED, transport: makeTransport({ reads: makeState().reads }), path: "/limits" });
     expect(screen.getByText(/Maximum 10 adjudicable evidence records per claim/)).toBeInTheDocument();
     expect(screen.getByText(/Evidence slots are first-come/)).toBeInTheDocument();
     expect(screen.getByText(/first-settled, first-served/i)).toBeInTheDocument();
     expect(screen.getByText(/Unavailable evidence is not negative evidence/)).toBeInTheDocument();
-    expect(screen.getByText(/Warranties are not irrevocable in V1/)).toBeInTheDocument();
+    expect(screen.getByText(/The manufacturer cannot cancel, shorten or rewrite a warranty once it is issued/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/not irrevocable|unilateral/i);
     void ADDR; void NOW;
   });
 });

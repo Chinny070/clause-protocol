@@ -9,7 +9,7 @@ Fill the placeholders only after deployment and after the read-only verification
 - **Contract address (StudioNet, chain 61999):** `<CONTRACT ADDRESS - placeholder>`
 - **Explorer address:** `<STUDIONET EXPLORER URL FOR THE CONTRACT - placeholder>`
 - **Deployment transaction:** `<DEPLOY TX HASH - placeholder>`
-- **Source SHA-256 of the deployed file:** `07d7e4bfdbaeeba2d30129c00034cd728681ed99877286a16189005fbe7d847e`
+- **Source SHA-256 of the deployed file:** `2cae6e200ee82b747ebe89bf3e423768fca545ada840348a8f104d9053c07851`
 - **Repository / source:** `<REPO URL - placeholder>` (`contracts/clause_protocol.py`)
 
 ## Full description
@@ -22,7 +22,7 @@ A warranty is only as good as who gets to interpret it. In a traditional warrant
 5. **One Application Challenge** (a bounded, deterministic-first review of a specific error - distinct from GenLayer's protocol appeal) can correct a decision; history is never deleted.
 6. **Settlement is pull-payment**, gated by protocol finality, and a public **Resolution Receipt** shows the whole chain from frozen terms to withdrawal.
 
-**Honest limits (V1):** 10 evidence records per claim (first-come); a warranty's maximum remedy is shared by its claims; warranties can be cancelled by the manufacturer or holder while no claim is unsettled (disclosed in the app).
+**Honest limits (V1):** 10 evidence records per claim (first-come); a warranty's maximum remedy is shared by its claims; an issued warranty cannot be cancelled by the manufacturer (terms frozen at issuance); only the holder may cancel their own, while no claim is unsettled.
 
 ## Tags
 `genlayer` `intelligent-contract` `warranty` `insurance` `dispute-resolution` `optimistic-democracy` `web-evidence` `real-world-assets` `studionet`
@@ -36,7 +36,7 @@ A warranty is only as good as who gets to interpret it. In a traditional warrant
 
 ## Steward-verifiable outcome (externally checkable, no trust in this project)
 For the demo claim `<CLAIM ID>` on contract `<CONTRACT ADDRESS>` a steward can verify, using only public StudioNet data (explorer or `readContract`/`getTransaction`):
-1. **Source parity:** the deployed source hashes to `07d7e4bf…847e`, equal to the audited repository file.
+1. **Source parity:** the deployed source hashes to `2cae6e20…7851`, equal to the audited repository file.
 2. **Frozen terms:** `get_passport(<ID>).constitution_fingerprint == get_constitution(<ID>).fingerprint == get_claim(<CLAIM ID>).constitution_fingerprint`, and `get_constitution(...).is_frozen == true` with `frozen_at` earlier than the claim's `filed_at`.
 3. **Independent evidence:** each frozen evidence record's `fingerprint` and `retrieved_at`/`frozen_at`, from a host permitted by the frozen `source_eligibility_policy`; re-fetching the URL shows the same bounded content.
 4. **Validator consensus:** the adjudication transaction `<ADJUDICATION TX HASH>` is `FINALIZED`, its leader execution is `SUCCESS`, and the validators' votes are recorded in the receipt (`getTransaction(...).consensus_data`); `get_adjudication(<ID>).decision_path == "SEMANTIC"`.

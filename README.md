@@ -66,4 +66,4 @@ Verified locally: the contract's deterministic behaviour, accounting, the frozen
 
 ## Important V1 limits
 
-Maximum 10 adjudicable evidence records per claim (first-come); a warranty's maximum remedy is a lifetime cap shared by its claims (first-settled-first-served); unavailable evidence is not negative evidence; **warranties can be cancelled by the manufacturer or holder while no claim is unsettled** (flagged for release review). Full list: the app's `/limits` page.
+Maximum 10 adjudicable evidence records per claim (first-come); a warranty's maximum remedy is a lifetime cap shared by its claims (first-settled-first-served); unavailable evidence is not negative evidence; **an issued warranty is a commitment: the manufacturer cannot cancel it (pausing/retiring a program stops future issuance only); the holder may cancel their own while no claim is unsettled**. Full list: the app's `/limits` page.

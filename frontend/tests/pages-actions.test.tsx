@@ -278,3 +278,39 @@ describe("no wallet needed for public reads", () => {
     void CONFIGURED; void ADDR; void MFR;
   });
 });
+
+
+describe("issued warranties are commitments (V1 cancellation policy)", () => {
+  it("the manufacturer sees no cancel control on an issued passport and the page says they cannot cancel", async () => {
+    const { MFR } = await import("./helpers/harness");
+    const s = setup({ claimStatus: "DECIDED", account: MFR });
+    renderApp({ path: "/passport/1", transport: s.read, provider: s.provider, writeTransport: s.write });
+    await screen.findByLabelText("Warranty passport 1");
+    await waitFor(() => expect(screen.getByText(/0xaaaa/i, { selector: ".badge" })).toBeInTheDocument());
+    expect(screen.queryByRole("button", { name: "Cancel warranty" })).toBeNull();
+    expect(screen.getByText(/ISSUED WARRANTY — TERMS FROZEN/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/manufacturer or the holder|not irrevocable/i);
+  });
+  it("the holder can cancel their own warranty (with an irreversible-step confirmation), only when no claim is unsettled", async () => {
+    const s = setup({ claimStatus: "SETTLED" });
+    renderApp({ path: "/passport/1", transport: s.read, provider: s.provider, writeTransport: s.write });
+    await screen.findByLabelText("Warranty passport 1");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Cancel warranty" })).toBeEnabled());
+    await userEvent.click(screen.getByRole("button", { name: "Cancel warranty" }));
+    expect(s.writes).toHaveLength(0);
+    await userEvent.click(await screen.findByRole("button", { name: /Yes, cancel warranty/i }));
+    await waitFor(() => expect(s.writes).toEqual([{ fn: "cancel_warranty", args: [1], value: 0n }]));
+  });
+  it("a holder with an unsettled claim sees the cancel control disabled with the reason", async () => {
+    const s = setup({ claimStatus: "DECIDED" });
+    renderApp({ path: "/passport/1", transport: s.read, provider: s.provider, writeTransport: s.write });
+    await screen.findByLabelText("Warranty passport 1");
+    await waitFor(() => expect(screen.getByText(/A claim on this warranty is unsettled/)).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Cancel warranty" })).toBeDisabled();
+  });
+  it("the program console states that retiring stops future issuance only", async () => {
+    const s = setup({});
+    renderApp({ path: "/manufacturer/program/1", transport: s.read, provider: makeProvider({ accounts: [MFR] }), writeTransport: s.write });
+    expect(await screen.findByText(/Retiring a program stops future issuance\. Existing warranties remain governed by their frozen terms\./)).toBeInTheDocument();
+  });
+});

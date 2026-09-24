@@ -76,4 +76,4 @@ Stop and tell the assistant if: the wallet shows a chain other than 61999; a tra
 
 ## Cleanup
 
-Nothing needs cleanup. Test warranties can be cancelled from the passport page once no claim is unsettled; unreserved capacity can be withdrawn from the program console.
+Nothing needs cleanup. Test warranties can be cancelled by their holder from the passport page once no claim is unsettled (the manufacturer cannot cancel an issued warranty); unreserved capacity can be withdrawn from the program console.

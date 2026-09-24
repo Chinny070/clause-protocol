@@ -1,10 +1,10 @@
-# Release security matrix (Stage 6A) - audited file SHA-256 `07d7e4bf…847e`
+# Release security matrix (Stage 6A.1) - audited file SHA-256 `2cae6e20…7851` (supersedes `07d7e4bf…847e`, DO NOT DEPLOY)
 
-Method: (1) read the guard in the source (line numbers refer to the audited file); (2) **independent effectiveness check**: `scripts/security_mutation_sweep.py` disables each guard in turn and requires the protecting tests to fail (16 of 18 killed; the 2 survivors are provably redundant, see below; raw results `docs/RELEASE_MUTATION_SWEEP.json`); (3) list the residual risk that no local test can close. "Verified locally" never means "verified on StudioNet".
+Method: (1) read the guard in the source (line numbers refer to the audited file); (2) **independent effectiveness check**: `scripts/security_mutation_sweep.py` disables each guard in turn and requires the protecting tests to fail (17 of 19 killed; the 2 survivors are provably redundant, see below; raw results `docs/RELEASE_MUTATION_SWEEP.json`); (3) list the residual risk that no local test can close. "Verified locally" never means "verified on StudioNet".
 
 | Area | Mechanism (source) | Independent check this stage | Residual / not provable locally |
 |---|---|---|---|
-| Authorization | Program ops `_require_manufacturer` (L1216, used L1225-1495); `file_claim` holder-only (L1701); `respond_to_claim` manufacturer-only (L1776); evidence/challenge party checks (`_require_party` L2140); withdrawal recipient-only (L2617); finalize/settle/freeze/adjudicate/resolve permissionless but only over frozen state | Sweep: holder check, manufacturer check, recipient check each **killed** | Address encoding of the caller under real StudioNet (`_sender()`) unverified live |
+| Authorization | Program ops `_require_manufacturer` (L1216, used L1225-1495); `file_claim` holder-only (L1701); `respond_to_claim` manufacturer-only (L1776); evidence/challenge party checks (`_require_party` L2140); `cancel_warranty` holder-only (V1 policy: the manufacturer cannot cancel an issued warranty; sweep guard **killed**); withdrawal recipient-only (L2617); finalize/settle/freeze/adjudicate/resolve permissionless but only over frozen state | Sweep: holder check, manufacturer check, recipient check each **killed** | Address encoding of the caller under real StudioNet (`_sender()`) unverified live |
 | Frozen Constitution | `is_frozen` set inside `issue_warranty` (L1526-1527) in the same tx as the first passport; frozen-terms tests assert every write method leaves it untouched (`test_constitution_hardening`) | Exhaustive write-method inventory test (a new write method fails the suite until audited) | none known |
 | Source eligibility | `https` only + exact-host / `*.base` rule (`_host_allowed` L129, L1848), decided at submission, before any fetch; ineligible records never retrieved or adjudicated | Sweep: host policy **killed**; 18 lookalike/suffix/prefix attack tests | Redirect behaviour of real `web.get` unverified (Gate A/E cover retrieval) |
 | Evidence cap | ELIGIBLE records counted over stored state at submit (L1859), cap 10; adjudication asserts the invariant | Sweep **killed**; 9/10/11 boundary tests | first-come fairness (disclosed) |
@@ -25,7 +25,7 @@ Method: (1) read the guard in the source (line numbers refer to the audited file
 - **Unbounded claims per warranty:** there is no cap on the number of claims a warranty can accumulate (each needs the previous to be past dispute, so it costs the holder transactions). `cancel_warranty`, `release_expired_reservation` and `get_resolution_receipt`/`list_*` iterate them linearly. Low risk (self-inflicted cost), noted for a future version.
 - **`fund_pool` is open to anyone** (donations only increase the manufacturer's pool; deliberate and trivial by design, no revert path after value arrives).
 - **Line-ending hazard fixed:** the working copy was CRLF while Git stores LF (the earlier on-disk hash `1e990046…` differed from the committed content's `07d7e4bf…`). The file is now LF on disk, identical to the blob at the Stage 4.5 freeze; `.gitattributes` (`*.py text eol=lf`) keeps it so, and the deployer/test enforce the LF hash.
-- No new contract defect was found; the contract was not modified.
+- Stage 6A.1: the manufacturer-cancellation risk was closed by a single authorization guard in `cancel_warranty`; no other behaviour changed.
 
 ## Verdict on security
-No blocking finding. Open items are exactly the StudioNet gates (A-H) plus the human cancellation-policy decision (`docs/CANCELLATION_POLICY_DECISION.md`).
+No blocking finding. Open items are exactly the StudioNet gates (A-H) (the cancellation-policy decision is resolved).

@@ -7,8 +7,8 @@
 | | |
 |---|---|
 | File | `contracts/clause_protocol.py` (in this repository) |
-| **SHA-256** | **`07d7e4bfdbaeeba2d30129c00034cd728681ed99877286a16189005fbe7d847e`** |
-| Size | 134,456 bytes, ASCII, LF line endings |
+| **SHA-256** | **`2cae6e200ee82b747ebe89bf3e423768fca545ada840348a8f104d9053c07851`** |
+| Size | 134,577 bytes, ASCII, LF line endings |
 | Git | commit that contains this document; the file is byte-identical to its Stage 4.5 freeze blob (`5e7e7f3b…`) |
 | Header | `# v0.1.0` and `# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }` |
 | Constructor arguments | **none** (no arguments; `__init__(self)`) |
@@ -87,6 +87,6 @@ The GenLayer CLI (`genlayer deploy --contract contracts/clause_protocol.py --rpc
 ## After you send the hash and address (assistant, read-only)
 
 1. Read the deployment transaction from StudioNet: status `FINALIZED`, leader execution `SUCCESS`, sender = your address, target/creation = the contract address.
-2. Fetch the deployed source (`getContractCode`) and compare its SHA-256 to `07d7e4bf…`; fetch the deployed schema and compare to the frozen interface (40 methods: 18 view, 22 write, 1 payable `fund_pool`).
+2. Fetch the deployed source (`getContractCode`) and compare its SHA-256 to `2cae6e20…`; fetch the deployed schema and compare to the frozen interface (40 methods: 18 view, 22 write, 1 payable `fund_pool`).
 3. Call the views `now()` and `list_program_ids()` (expected `[]`).
 4. Only then: `VITE_CLAUSE_CONTRACT_ADDRESS=<address>` is set for the frontend build (the only configuration change; see `frontend/HOSTING.md`).
