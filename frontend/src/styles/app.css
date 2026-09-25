@@ -88,6 +88,11 @@ main { padding: 26px 0 60px; min-height: 60vh; }
 .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(12, 42, 53, 0.35); }
 .btn.secondary { background: transparent; color: var(--petroleum); }
 .btn.secondary:hover { background: rgba(12, 52, 68, 0.1); color: var(--petroleum); }
+/* Buttons on dark petroleum panels must stay visible (accept/dispute, confirm/cancel). */
+.plate.petrol .btn { background: var(--mint); color: var(--petroleum); border-color: var(--mint); }
+.plate.petrol .btn:hover { background: #fff; color: var(--petroleum); border-color: #fff; }
+.plate.petrol .btn.secondary, .plate.petrol .btn.warn { background: transparent; color: #fff; border-color: #fff; }
+.plate.petrol .btn.secondary:hover, .plate.petrol .btn.warn:hover { background: rgba(255, 255, 255, 0.16); color: #fff; }
 .btn.warn { background: var(--red); border-color: var(--red); }
 .btn.plum { background: var(--plum); border-color: var(--plum); }
 .btn[disabled], .btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; box-shadow: none; transform: none; background-image: repeating-linear-gradient(45deg, transparent 0 6px, rgba(255, 255, 255, 0.18) 6px 8px); }
